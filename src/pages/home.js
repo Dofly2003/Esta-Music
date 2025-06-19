@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { createAuthUrl, getTokenFromCode } from "../auth.js";
+import { createAuthUrl, getTokenFromCode } from "../auth";
 import axios from "axios";
 import { Link } from "react-router-dom";
 
@@ -16,8 +16,10 @@ function Home() {
   const [token, setToken] = useState(localStorage.getItem("spotify_token") || "");
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
+  const [topArtists, setTopArtists] = useState([]);
+  const [albums, setAlbums] = useState([]);
+  const [playlists, setPlaylists] = useState([]);
 
-  // Cek token dari URL
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
@@ -33,7 +35,7 @@ function Home() {
     }
   }, [token]);
 
-  // Search API
+  // Search logic
   useEffect(() => {
     if (!token || !searchTerm.trim()) {
       setSearchResults([]);
@@ -58,20 +60,53 @@ function Home() {
     return () => clearTimeout(timeout);
   }, [searchTerm, token]);
 
-  // Handle Login
+  // Ambil top artists dan album/playlist mereka
+  useEffect(() => {
+    if (!token) return;
+
+    const fetchTopData = async () => {
+      try {
+        const res = await axios.get("https://api.spotify.com/v1/me/top/artists?limit=2", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setTopArtists(res.data.items);
+
+        const allAlbums = [];
+        const allPlaylists = [];
+
+        for (const artist of res.data.items) {
+          const albumsRes = await axios.get(`https://api.spotify.com/v1/artists/${artist.id}/albums?include_groups=album&limit=2`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          allAlbums.push(...albumsRes.data.items);
+
+          const playlistsRes = await axios.get(`https://api.spotify.com/v1/search?q=${artist.name}&type=playlist&limit=1`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          allPlaylists.push(...playlistsRes.data.playlists.items);
+        }
+
+        setAlbums(allAlbums);
+        setPlaylists(allPlaylists);
+      } catch (err) {
+        console.error("Top artist/albums error:", err);
+      }
+    };
+
+    fetchTopData();
+  }, [token]);
+
   const handleLogin = async () => {
     const authUrl = await createAuthUrl();
     window.location.href = authUrl;
   };
 
-  // Handle Logout
   const handleLogout = () => {
     localStorage.removeItem("spotify_token");
     setToken("");
     setSearchResults([]);
   };
 
-  // Manual shuffle button
   const handleShuffle = () => {
     setSearchResults(shuffleArray(searchResults));
   };
@@ -99,7 +134,7 @@ function Home() {
             </div>
           </div>
 
-          {/* Search Input */}
+          {/* Search */}
           <input
             type="text"
             placeholder="Search album, artist, or song..."
@@ -108,7 +143,6 @@ function Home() {
             className="w-full p-3 border rounded mb-4"
           />
 
-          {/* Shuffle Button */}
           {searchResults.length > 0 && (
             <div className="mb-4">
               <button
@@ -121,7 +155,7 @@ function Home() {
           )}
 
           {/* Search Results */}
-          <div className="space-y-6">
+          <div className="space-y-6 mb-10">
             {searchResults.map((track) => (
               <div key={track.id} className="bg-white p-4 rounded shadow">
                 <div className="flex items-center gap-4">
@@ -132,7 +166,7 @@ function Home() {
                   />
                   <div>
                     <h2 className="font-bold text-lg">{track.name}</h2>
-                    <p className="text-gray-600">{track.artists.map(a => a.name).join(", ")}</p>
+                    <p className="text-gray-600">{track.artists.map((a) => a.name).join(", ")}</p>
                   </div>
                 </div>
                 <div className="mt-4">
@@ -141,13 +175,49 @@ function Home() {
                     width="100%"
                     height="80"
                     frameBorder="0"
-                    allowtransparency="true"
                     allow="encrypted-media"
                     title={track.name}
                   ></iframe>
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Top Artist Section */}
+          <div>
+            <h2 className="text-xl font-bold mb-4">🔥 Albums from Your Favorite Artists</h2>
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              {albums.map((album) => (
+                <a
+                  href={`https://open.spotify.com/album/${album.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  key={album.id}
+                  className="bg-white rounded shadow p-3 hover:bg-gray-50 transition"
+                >
+                  <img src={album.images[0]?.url} alt={album.name} className="w-full rounded mb-2" />
+                  <div className="font-bold">{album.name}</div>
+                  <div className="text-sm text-gray-500">{album.artists.map(a => a.name).join(", ")}</div>
+                </a>
+              ))}
+            </div>
+
+            <h2 className="text-xl font-bold mb-4">🎧 Playlists Inspired by Your Artists</h2>
+            <div className="grid grid-cols-2 gap-4">
+              {playlists.map((playlist) => (
+                <a
+                  href={`https://open.spotify.com/playlist/${playlist.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  key={playlist.id}
+                  className="bg-white rounded shadow p-3 hover:bg-gray-50 transition"
+                >
+                  <img src={playlist.images[0]?.url} alt={playlist.name} className="w-full rounded mb-2" />
+                  <div className="font-bold">{playlist.name}</div>
+                  <div className="text-sm text-gray-500">by {playlist.owner.display_name}</div>
+                </a>
+              ))}
+            </div>
           </div>
         </>
       )}
