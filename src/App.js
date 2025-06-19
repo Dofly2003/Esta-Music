@@ -9,11 +9,11 @@ function App() {
   const [player, setPlayer] = useState(null);
   const [deviceId, setDeviceId] = useState("");
   const [nowPlaying, setNowPlaying] = useState(null);
-  const isPlayerReady = useRef(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
+  const isPlayerReady = useRef(false);
 
-  // --- Exchange Code for Token ---
+  // --- Exchange code for token ---
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
@@ -21,10 +21,9 @@ function App() {
     if (code && !token) {
       getTokenFromCode(code).then((newToken) => {
         if (newToken) {
-          localStorage.setItem("spotify_token", newToken);
           setToken(newToken);
+          window.history.replaceState({}, document.title, "/");
         }
-        window.history.replaceState({}, document.title, "/");
       });
     }
   }, [token]);
@@ -44,7 +43,7 @@ function App() {
         setArtists(artistRes.data.items);
         setTracks(trackRes.data.items);
       } catch (err) {
-        console.error("Fetch top error:", err.response?.data || err);
+        console.error("Fetch top error:", err);
         localStorage.removeItem("spotify_token");
         localStorage.removeItem("spotify_code_verifier");
         setToken("");
@@ -53,7 +52,7 @@ function App() {
     if (token) fetchTop();
   }, [token]);
 
-  // --- Spotify Player Setup ---
+  // --- Spotify Player SDK ---
   useEffect(() => {
     if (!token || player || isPlayerReady.current) return;
 
@@ -89,7 +88,6 @@ function App() {
     };
   }, [token, player]);
 
-  // --- Transfer Playback ---
   async function transferPlaybackHere(deviceId, token) {
     await fetch("https://api.spotify.com/v1/me/player", {
       method: "PUT",
@@ -97,14 +95,10 @@ function App() {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        device_ids: [deviceId],
-        play: false
-      })
+      body: JSON.stringify({ device_ids: [deviceId], play: false })
     });
   }
 
-  // --- Play Track ---
   async function playTrack(uri) {
     if (!deviceId) {
       alert("Player belum siap.");
@@ -138,37 +132,41 @@ function App() {
         );
         setSearchResults(res.data.tracks?.items || []);
       } catch (err) {
-        console.error("Search failed:", err.response?.data || err);
+        console.error("Search failed:", err);
       }
     };
 
-    const timeout = setTimeout(fetchSearch, 500); // debounce
+    const timeout = setTimeout(fetchSearch, 500);
     return () => clearTimeout(timeout);
   }, [searchTerm, token]);
 
-  // --- Handle Login ---
   const handleLogin = async () => {
     const authUrl = await createAuthUrl();
     window.location.href = authUrl;
   };
 
-  // --- Handle Logout ---
   const handleLogout = () => {
     localStorage.removeItem("spotify_token");
     localStorage.removeItem("spotify_code_verifier");
     setToken("");
-    window.location.href = "/";
+    window.location.reload();
   };
 
   // --- UI ---
   if (!token) {
     return (
-      <div className="h-screen flex items-center justify-center bg-gray-900 text-white">
+      <div className="h-screen flex flex-col items-center justify-center bg-gray-900 text-white">
         <button
           onClick={handleLogin}
           className="bg-green-500 px-6 py-3 rounded-lg text-lg font-bold hover:bg-green-600"
         >
           Login with Spotify
+        </button>
+        <button
+          onClick={handleLogout}
+          className="mt-4 text-sm underline"
+        >
+          Reset Token
         </button>
       </div>
     );
@@ -176,23 +174,11 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
-      <div className="flex justify-between mb-4 items-center">
+      <div className="flex justify-between mb-4">
         <h1 className="text-2xl font-bold">🎧 Spotify Dashboard</h1>
-        <div className="flex gap-4 items-center">
-          <button onClick={handleLogout} className="text-red-500 underline">Logout</button>
-          <button
-            onClick={() => {
-              localStorage.clear();
-              window.location.reload();
-            }}
-            className="text-blue-500 underline text-sm"
-          >
-            Reset App
-          </button>
-        </div>
+        <button onClick={handleLogout} className="text-red-500 underline">Logout</button>
       </div>
 
-      {/* --- Search Input --- */}
       <input
         type="text"
         value={searchTerm}
@@ -201,7 +187,7 @@ function App() {
         className="w-full p-2 mb-6 border rounded"
       />
 
-      {/* --- Search Results --- */}
+      {/* Search Results */}
       {searchResults.length > 0 && (
         <div>
           <h2 className="text-xl font-semibold mb-2">🔍 Search Results</h2>
@@ -226,7 +212,7 @@ function App() {
         </div>
       )}
 
-      {/* --- Top Artists --- */}
+      {/* Top Artists */}
       <h2 className="text-xl font-bold mb-4">🔥 Top Artists</h2>
       <ul className="space-y-4 mb-8">
         {artists.map((artist) => (
@@ -240,7 +226,7 @@ function App() {
         ))}
       </ul>
 
-      {/* --- Top Tracks --- */}
+      {/* Top Tracks */}
       <h2 className="text-xl font-bold mb-4">🎵 Top Tracks</h2>
       <ul className="space-y-4">
         {tracks.map((track) => (
@@ -261,7 +247,6 @@ function App() {
         ))}
       </ul>
 
-      {/* --- Now Playing --- */}
       {nowPlaying && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex items-center gap-4 shadow">
           <img src={nowPlaying.album.images[0]?.url} alt={nowPlaying.name} className="w-12 h-12 rounded" />
