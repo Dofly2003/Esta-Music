@@ -75,14 +75,16 @@ function Home() {
         const allPlaylists = [];
 
         for (const artist of res.data.items) {
-          const albumsRes = await axios.get(`https://api.spotify.com/v1/artists/${artist.id}/albums?include_groups=album&limit=2`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+          const albumsRes = await axios.get(
+            `https://api.spotify.com/v1/artists/${artist.id}/albums?include_groups=album&limit=2`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
           allAlbums.push(...albumsRes.data.items);
 
-          const playlistsRes = await axios.get(`https://api.spotify.com/v1/search?q=${artist.name}&type=playlist&limit=1`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+          const playlistsRes = await axios.get(
+            `https://api.spotify.com/v1/search?q=${encodeURIComponent(artist.name)}&type=playlist&limit=1`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
           allPlaylists.push(...playlistsRes.data.playlists.items);
         }
 
@@ -134,7 +136,7 @@ function Home() {
             </div>
           </div>
 
-          {/* Search */}
+          {/* Search Box */}
           <input
             type="text"
             placeholder="Search album, artist, or song..."
@@ -142,16 +144,6 @@ function Home() {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full p-3 border rounded mb-4"
           />
-
-          {/* Tombol ke halaman playlist */}
-          <div className="mb-6">
-            <Link
-              to="/playlists"
-              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 font-semibold"
-            >
-              🎼 Your Playlists
-            </Link>
-          </div>
 
           {searchResults.length > 0 && (
             <div className="mb-4">
@@ -187,13 +179,14 @@ function Home() {
                     frameBorder="0"
                     allow="encrypted-media"
                     title={track.name}
+                    className="rounded"
                   ></iframe>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Top Artist Section */}
+          {/* Albums from Top Artists */}
           <div>
             <h2 className="text-xl font-bold mb-4">🔥 Albums from Your Favorite Artists</h2>
             <div className="grid grid-cols-2 gap-4 mb-6">
@@ -212,20 +205,19 @@ function Home() {
               ))}
             </div>
 
+            {/* Playlist Section */}
             <h2 className="text-xl font-bold mb-4">🎧 Playlists Inspired by Your Artists</h2>
             <div className="grid grid-cols-2 gap-4">
               {playlists.map((playlist) => (
-                <a
-                  href={`https://open.spotify.com/playlist/${playlist.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Link
+                  to={`/playlist/${playlist.id}`}
                   key={playlist.id}
                   className="bg-white rounded shadow p-3 hover:bg-gray-50 transition"
                 >
                   <img src={playlist.images[0]?.url} alt={playlist.name} className="w-full rounded mb-2" />
                   <div className="font-bold">{playlist.name}</div>
                   <div className="text-sm text-gray-500">by {playlist.owner.display_name}</div>
-                </a>
+                </Link>
               ))}
             </div>
           </div>
