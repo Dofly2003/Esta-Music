@@ -3,27 +3,14 @@ import { createAuthUrl, getTokenFromCode } from "../auth";
 import axios from "axios";
 import { Link } from "react-router-dom";
 
-const randomArtists = [
-  "Drake", "Taylor Swift", "Coldplay", "Adele", "Eminem", "BTS", "Ed Sheeran"
-];
-
-function shuffleArray(array) {
-  const shuffled = [...array];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-}
-
 function Home() {
   const [token, setToken] = useState(localStorage.getItem("spotify_token") || "");
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
-  const [playlists, setPlaylists] = useState([]);
   const [albums, setAlbums] = useState([]);
   const [error, setError] = useState("");
 
+  // Handle Spotify login callback
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
@@ -39,49 +26,34 @@ function Home() {
     }
   }, [token]);
 
+  // Fetch top tracks, then extract unique albums
   useEffect(() => {
     if (!token) return;
 
-    const fetchData = async () => {
+    const fetchAlbumsFromTopTracks = async () => {
       try {
-        const artistSample = randomArtists.sort(() => 0.5 - Math.random()).slice(0, 3);
-        const playlistResult = [];
-        const albumResult = [];
+        const res = await axios.get(
+          "https://api.spotify.com/v1/me/top/tracks?limit=20",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const trackAlbums = res.data.items.map((track) => track.album);
 
-        for (const name of artistSample) {
-          const playlistRes = await axios.get(
-            `https://api.spotify.com/v1/search?q=${encodeURIComponent(name)}&type=playlist&limit=1`,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          if (playlistRes.data.playlists.items[0]) {
-            playlistResult.push(playlistRes.data.playlists.items[0]);
-          }
+        // Filter unique albums by album.id
+        const uniqueAlbums = Array.from(
+          new Map(trackAlbums.map((album) => [album.id, album])).values()
+        );
 
-          const artistRes = await axios.get(
-            `https://api.spotify.com/v1/search?q=${encodeURIComponent(name)}&type=artist&limit=1`,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          const artist = artistRes.data.artists.items[0];
-          if (artist) {
-            const albumsRes = await axios.get(
-              `https://api.spotify.com/v1/artists/${artist.id}/albums?include_groups=album&limit=1`,
-              { headers: { Authorization: `Bearer ${token}` } }
-            );
-            albumResult.push(...albumsRes.data.items);
-          }
-        }
-
-        setPlaylists(playlistResult);
-        setAlbums(albumResult);
+        setAlbums(uniqueAlbums);
       } catch (err) {
-        console.error("Fetch random playlist/album error:", err);
-        setError("Gagal mengambil data playlist/album");
+        console.error("Fetch top tracks/albums error:", err);
+        setError("Gagal mengambil album dari track kamu.");
       }
     };
 
-    fetchData();
+    fetchAlbumsFromTopTracks();
   }, [token]);
 
+  // Search logic (tidak berubah)
   useEffect(() => {
     if (!token || !searchTerm.trim()) {
       setSearchResults([]);
@@ -94,7 +66,7 @@ function Home() {
           `https://api.spotify.com/v1/search?q=${encodeURIComponent(searchTerm)}&type=track&limit=10`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        setSearchResults(shuffleArray(res.data.tracks.items));
+        setSearchResults(res.data.tracks.items);
       } catch (err) {
         console.error("Search error:", err);
       }
@@ -176,7 +148,7 @@ function Home() {
 
           {albums.length > 0 && (
             <div className="mb-8">
-              <h2 className="text-xl font-bold mb-4">🔥 Random Artist Albums</h2>
+              <h2 className="text-xl font-bold mb-4">⭐ Album from Your Top Tracks</h2>
               <div className="grid grid-cols-2 gap-4">
                 {albums.map((album) => (
                   <Link
@@ -188,27 +160,6 @@ function Home() {
                     <div className="font-bold">{album.name}</div>
                     <div className="text-sm text-gray-500">{album.artists.map(a => a.name).join(", ")}</div>
                   </Link>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {playlists.length > 0 && (
-            <div className="mb-6">
-              <h2 className="text-xl font-bold mb-4">🎧 Random Artist Playlists</h2>
-              <div className="grid grid-cols-2 gap-4">
-                {playlists.map((playlist) => (
-                  <a
-                    key={playlist.id}
-                    href={`https://open.spotify.com/playlist/${playlist.id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-white rounded shadow p-3 hover:bg-gray-50"
-                  >
-                    <img src={playlist.images[0]?.url} alt={playlist.name} className="w-full rounded mb-2" />
-                    <div className="font-bold">{playlist.name}</div>
-                    <div className="text-sm text-gray-500">by {playlist.owner.display_name}</div>
-                  </a>
                 ))}
               </div>
             </div>
