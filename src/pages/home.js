@@ -69,7 +69,7 @@ function Home() {
             onClick={handleLogin}
             className="bg-green-500 px-6 py-3 rounded-lg text-lg font-bold hover:bg-green-600"
           >
-            Login with Spotify
+            Login with Spotifyy
           </button>
         </div>
       ) : (
