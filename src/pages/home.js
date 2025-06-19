@@ -315,16 +315,33 @@ function Home() {
                   {/* Section Tren */}
                   {trendingAlbums.length > 0 && (
                     <>
-                      <h2 className="text-2xl font-semibold mt-14 mb-4 text-white drop-shadow">🔥 Albums Sedang Tren</h2>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-7">
-                        {trendingAlbums.map((album) => (
-                          <div key={album.id} className="bg-white/90 rounded-2xl shadow-lg flex flex-col items-center p-4 hover:bg-green-50 transition">
-                            <img src={album.images?.[0]?.url} alt={album.name} className="w-32 h-32 object-cover rounded-xl mb-2 shadow" />
-                            <div className="font-bold text-center text-gray-900">{album.name}</div>
-                            <div className="text-sm text-gray-500 text-center">{album.artists?.map(a => a.name).join(", ")}</div>
-                          </div>
-                        ))}
+                      <h2 className="text-2xl font-semibold mt-14 mb-4 text-white drop-shadow">
+                        🔥 Albums Sedang Tren
+                      </h2>
+                      <div className="w-full overflow-x-auto hide-scrollbar">
+                        <div className="flex gap-7 pb-4">
+                          {trendingAlbums.map((album) => (
+                            <Link
+                              key={album.id}
+                              to={`/album/${album.id}`}
+                              className="bg-white/90 rounded-2xl shadow-lg flex flex-col items-center p-4 hover:bg-green-50 transition min-w-[220px] max-w-[220px] cursor-pointer"
+                            >
+                              <img
+                                src={album.images?.[0]?.url}
+                                alt={album.name}
+                                className="w-32 h-32 object-cover rounded-xl mb-2 shadow"
+                              />
+                              <div className="font-bold text-center text-gray-900">{album.name}</div>
+                              <div className="text-sm text-gray-500 text-center">{album.artists?.map(a => a.name).join(", ")}</div>
+                            </Link>
+                          ))}
+                        </div>
                       </div>
+                      {/* Sembunyikan scrollbar pada flex scroll */}
+                      <style>{`
+                        .hide-scrollbar::-webkit-scrollbar { display: none; }
+                        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+                      `}</style>
                     </>
                   )}
                 </div>
