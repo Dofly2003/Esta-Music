@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
 import { createAuthUrl, getTokenFromCode } from "../auth";
 import axios from "axios";
+import { Link } from "react-router-dom";
 
 function Home() {
   const [token, setToken] = useState(localStorage.getItem("spotify_token") || "");
@@ -9,14 +9,6 @@ function Home() {
   const [searchResults, setSearchResults] = useState([]);
   const [albums, setAlbums] = useState([]);
   const [error, setError] = useState("");
-  const navigate = useNavigate();
-
-  // Redirect to /login if not logged in
-  useEffect(() => {
-    if (!token) {
-      navigate("/login", { replace: true });
-    }
-  }, [token, navigate]);
 
   // Handle Spotify login callback
   useEffect(() => {
@@ -33,6 +25,7 @@ function Home() {
       });
     }
   }, [token]);
+
 
   // Fetch top tracks, then extract unique albums
   useEffect(() => {
