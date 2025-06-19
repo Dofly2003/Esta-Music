@@ -1,9 +1,9 @@
 const clientId = "a0d0b65251a04e6aa5230da17b2405b6"; // ganti dengan milikmu
-const redirectUri = "https://esta-music.vercel.app"; // ← Sesuai dengan yang kamu daftarkan
+const redirectUri = "https://esta-music.vercel.app"; // sesuai yang didaftarkan di Spotify Dashboard
 
 const generateRandomString = (length) => {
-  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  return Array.from({ length }, () => possible.charAt(Math.floor(Math.random() * possible.length))).join('');
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
 };
 
 const generateCodeVerifier = () => generateRandomString(128);
@@ -40,4 +40,28 @@ export const createAuthUrl = async () => {
   });
 
   return `https://accounts.spotify.com/authorize?${params.toString()}`;
+};
+
+// ⬇️ Tambahkan bagian ini agar tidak error saat di-import
+export const getTokenFromCode = async (code) => {
+  const codeVerifier = localStorage.getItem("spotify_code_verifier");
+
+  const body = new URLSearchParams({
+    grant_type: "authorization_code",
+    code,
+    redirect_uri: redirectUri,
+    client_id: clientId,
+    code_verifier: codeVerifier,
+  });
+
+  const response = await fetch("https://accounts.spotify.com/api/token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: body.toString(),
+  });
+
+  const data = await response.json();
+  return data.access_token;
 };
