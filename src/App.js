@@ -1,40 +1,47 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { createAuthUrl, clientId, redirect_uri } from "./auth";
+import { createAuthUrl } from "./auth";
+
+const clientId = "SPOTIFY_CLIENT_ID_KAMU"; // GANTI dengan client ID kamu
+const redirectUri = "https://esta-music.vercel.app"; // Sesuai yang kamu daftarkan di Spotify dashboard
 
 function App() {
   const [tracks, setTracks] = useState([]);
   const [token, setToken] = useState(localStorage.getItem("spotify_token") || "");
 
-  // Ambil token dari URL code (PKCE flow)
+  // Ambil code dari URL & tukar dengan access_token
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get("code");
 
-    if (code) {
+    if (code && !token) {
       const codeVerifier = localStorage.getItem("spotify_code_verifier");
 
       const body = new URLSearchParams({
-        client_id: clientId,
         grant_type: "authorization_code",
         code,
-        redirect_uri,
+        redirect_uri: redirectUri,
+        client_id: clientId,
         code_verifier: codeVerifier,
       });
 
       fetch("https://accounts.spotify.com/api/token", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body,
+        body: body.toString(),
       })
         .then((res) => res.json())
         .then((data) => {
-          localStorage.setItem("spotify_token", data.access_token);
-          setToken(data.access_token);
-          window.history.replaceState({}, document.title, "/"); // Bersihkan URL
+          if (data.access_token) {
+            localStorage.setItem("spotify_token", data.access_token);
+            setToken(data.access_token);
+            window.history.replaceState({}, document.title, "/"); // bersihkan URL
+          } else {
+            console.error("Token exchange failed", data);
+          }
         });
     }
-  }, []);
+  }, [token]);
 
   // Ambil top track Spotify user
   useEffect(() => {
@@ -42,18 +49,14 @@ function App() {
 
     const fetchTopTracks = async () => {
       try {
-        const res = await axios.get(
-          "https://api.spotify.com/v1/me/top/tracks?limit=5",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const res = await axios.get("https://api.spotify.com/v1/me/top/tracks?limit=5", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         setTracks(res.data.items);
       } catch (error) {
         console.error("Error fetching tracks", error);
-        // Reset token kalau error (misal token expired)
         localStorage.removeItem("spotify_token");
         setToken("");
       }
@@ -65,14 +68,17 @@ function App() {
   // Belum login
   if (!token) {
     return (
-      <button
-        onClick={async () => {
-          const authUrl = await createAuthUrl();
-          window.location.href = authUrl;
-        }}
-      >
-        Login with Spotify
-      </button>
+      <div className="h-screen flex items-center justify-center bg-black text-white">
+        <button
+          onClick={async () => {
+            const authUrl = await createAuthUrl();
+            window.location.href = authUrl;
+          }}
+          className="bg-green-500 hover:bg-green-600 px-6 py-3 rounded text-lg font-bold"
+        >
+          Login with Spotify
+        </button>
+      </div>
     );
   }
 
