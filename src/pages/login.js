@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { createAuthUrl, getTokenFromCode } from "../auth.js";
+import { createAuthUrl, getTokenFromCode } from "../auth";
 
 function Login() {
   const navigate = useNavigate();
@@ -12,12 +12,11 @@ function Login() {
     if (code) {
       getTokenFromCode(code).then((token) => {
         if (token) {
-          localStorage.setItem("spotify_token", token);
-          navigate("/");
+          navigate("/home");
         }
       });
     }
-  }, [navigate]);
+  }, []);
 
   const handleLogin = async () => {
     const url = await createAuthUrl();
@@ -25,11 +24,8 @@ function Login() {
   };
 
   return (
-    <div className="h-screen flex items-center justify-center bg-gray-900 text-white">
-      <button
-        onClick={handleLogin}
-        className="bg-green-500 px-6 py-3 rounded-lg text-lg font-bold hover:bg-green-600"
-      >
+    <div className="h-screen flex items-center justify-center bg-black text-white">
+      <button onClick={handleLogin} className="px-6 py-3 bg-green-500 rounded">
         Login with Spotify
       </button>
     </div>

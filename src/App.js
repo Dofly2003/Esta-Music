@@ -2,15 +2,15 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "./pages/login";
 import Home from "./pages/home";
+import Player from "./pages/player";
 
 function App() {
   return (
-    <Router>
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<Login />} />
+        <Route path="/home" element={<Home />} />
+        <Route path="/player" element={<Player />} />
       </Routes>
-    </Router>
   );
 }
 
