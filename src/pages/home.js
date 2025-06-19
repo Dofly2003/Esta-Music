@@ -63,11 +63,15 @@ function Home() {
         );
         setAlbums(res.data.albums.items);
       } catch (err) {
-        setError(
-          "Gagal mengambil album dari track kamu. " +
-          (err.response?.data?.error?.message || err.message)
-        );
-      }
+        if (err.response?.status === 403) {
+          setError("Akses ditolak. Silakan logout lalu login ulang dan izinkan akses ke Spotify Top Tracks.");
+        } else {
+          setError(
+            "Gagal mengambil album dari track kamu. " +
+            (err.response?.data?.error?.message || err.message)
+          );
+        }
+}
     };
 
     fetchAlbumsFromTopTracks();
