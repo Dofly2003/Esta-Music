@@ -139,8 +139,9 @@ function Home() {
   };
 
   // === INTERIOR DEKORASI STARTS HERE ===
+  // Perubahan utama: root container jadi min-h-screen w-full (BUKAN fixed/h-full)
   return (
-    <div className="fixed inset-0 w-full h-full bg-black">
+    <div className="min-h-screen w-full bg-black">
       {/* Dekorasi background: gradient & abstract circles */}
       <div className="fixed inset-0 z-0 pointer-events-none select-none">
         <div className="absolute inset-0 bg-gradient-to-br from-green-900 via-black to-[#1db954] opacity-95"></div>
@@ -156,10 +157,10 @@ function Home() {
         <span className="absolute left-1/2 top-1/3 text-4xl text-white/40 animate-pulse">🎼</span>
       </div>
       {/* Content */}
-      <div className="relative z-10 min-h-screen flex flex-col items-center justify-start">
+      <div className="relative z-10 flex flex-col items-center justify-start pb-12">
         {/* LOGIN PAGE */}
         {!token ? (
-          <div className="flex flex-col items-center justify-center w-full h-screen">
+          <div className="flex flex-col items-center justify-center w-full min-h-screen">
             <div className="mb-8 animate-fadein">
               <div className="flex items-center gap-3">
                 <span className="text-7xl animate-bounce-slow drop-shadow-2xl">🎧</span>
