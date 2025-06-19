@@ -218,6 +218,16 @@ function Home() {
                   </Link>
                 ))}
               </div>
+              <h2 className="text-xl font-bold mt-12 mb-4">🔥 Albums Sedang Tren</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-5">
+                {trendingAlbums.map((album) => (
+                  <div key={album.id} className="bg-white rounded-lg shadow flex flex-col items-center p-3 hover:bg-gray-50 transition">
+                    <img src={album.images[0].url} alt={album.name} className="w-32 h-32 object-cover rounded mb-2" />
+                    <div className="font-bold text-center">{album.name}</div>
+                    <div className="text-sm text-gray-500 text-center">{album.artists.map(a => a.name).join(", ")}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
