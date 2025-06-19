@@ -6,9 +6,17 @@ function Playlist() {
   const { playlistId } = useParams();
   const [token] = useState(localStorage.getItem("spotify_token"));
   const [playlist, setPlaylist] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!token) return;
+    if (!token) {
+      setError("You need to login with Spotify first.");
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError("");
     const fetchPlaylist = async () => {
       try {
         const res = await axios.get(
@@ -17,13 +25,16 @@ function Playlist() {
         );
         setPlaylist(res.data);
       } catch (err) {
-        console.error("Playlist fetch error:", err);
+        setError("Failed to load playlist. Please try again.");
       }
+      setLoading(false);
     };
     fetchPlaylist();
   }, [playlistId, token]);
 
-  if (!playlist) return <div className="p-8">Loading playlist...</div>;
+  if (loading) return <div className="p-8">Loading playlist...</div>;
+  if (error) return <div className="p-8 text-red-500">{error}</div>;
+  if (!playlist) return <div className="p-8">No data found.</div>;
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
