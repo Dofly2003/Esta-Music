@@ -4,7 +4,7 @@ import axios from "axios";
 import { Link } from "react-router-dom";
 
 const randomArtists = [
-  "Drake", "Taylor Swift", "Coldplay", "Adele", "suisei", "natori", "Ed Sheeran"
+  "Drake", "Taylor Swift", "Coldplay", "Adele", "Eminem", "BTS", "Ed Sheeran"
 ];
 
 function shuffleArray(array) {
