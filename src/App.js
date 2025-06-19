@@ -20,12 +20,20 @@ function App() {
 
     if (code && !token) {
       getTokenFromCode(code).then((newToken) => {
+        console.log("✅ New token received:", newToken);
+
         if (newToken) {
           localStorage.setItem("spotify_token", newToken);
           setToken(newToken);
+          window.history.replaceState({}, document.title, "/");
+        } else {
+          console.warn("❌ Token gagal didapat. Mungkin code sudah expired.");
+          localStorage.removeItem("spotify_token");
+          localStorage.removeItem("spotify_code_verifier");
+          window.location.href = "/";
         }
-        window.history.replaceState({}, document.title, "/");
       });
+
     }
   }, [token]);
 
