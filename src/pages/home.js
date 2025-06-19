@@ -49,21 +49,24 @@ function Home() {
         const albumResult = [];
 
         for (const name of artistSample) {
-          const playlistRes = await axios.get(`https://api.spotify.com/v1/search?q=${encodeURIComponent(name)}&type=playlist&limit=1`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
+          const playlistRes = await axios.get(
+            `https://api.spotify.com/v1/search?q=${encodeURIComponent(name)}&type=playlist&limit=1`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
           if (playlistRes.data.playlists.items[0]) {
             playlistResult.push(playlistRes.data.playlists.items[0]);
           }
 
-          const artistRes = await axios.get(`https://api.spotify.com/v1/search?q=${encodeURIComponent(name)}&type=artist&limit=1`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
+          const artistRes = await axios.get(
+            `https://api.spotify.com/v1/search?q=${encodeURIComponent(name)}&type=artist&limit=1`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
           const artist = artistRes.data.artists.items[0];
           if (artist) {
-            const albumsRes = await axios.get(`https://api.spotify.com/v1/artists/${artist.id}/albums?include_groups=album&limit=1`, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
+            const albumsRes = await axios.get(
+              `https://api.spotify.com/v1/artists/${artist.id}/albums?include_groups=album&limit=1`,
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
             albumResult.push(...albumsRes.data.items);
           }
         }
@@ -176,17 +179,15 @@ function Home() {
               <h2 className="text-xl font-bold mb-4">🔥 Random Artist Albums</h2>
               <div className="grid grid-cols-2 gap-4">
                 {albums.map((album) => (
-                  <a
+                  <Link
                     key={album.id}
-                    href={`https://open.spotify.com/album/${album.id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-white rounded shadow p-3 hover:bg-gray-50"
+                    to={`/album/${album.id}`}
+                    className="bg-white rounded shadow p-3 hover:bg-gray-50 block"
                   >
                     <img src={album.images[0]?.url} alt={album.name} className="w-full rounded mb-2" />
                     <div className="font-bold">{album.name}</div>
                     <div className="text-sm text-gray-500">{album.artists.map(a => a.name).join(", ")}</div>
-                  </a>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -211,6 +212,10 @@ function Home() {
                 ))}
               </div>
             </div>
+          )}
+
+          {error && (
+            <div className="text-red-500 font-bold mb-4">{error}</div>
           )}
         </>
       )}

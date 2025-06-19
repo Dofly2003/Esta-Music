@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/home";
 import Player from "./pages/player";
 import Playlist from "./pages/playlist";
+import Album from "./pages/album";
 import "./index.css";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
@@ -16,6 +17,7 @@ root.render(
         <Route path="/" element={<Home />} />
         <Route path="/player" element={<Player />} />
         <Route path="/playlist/:playlistId" element={<Playlist />} />
+        <Route path="/album/:albumId" element={<Album />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

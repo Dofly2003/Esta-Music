@@ -1,7 +1,7 @@
 const clientId = "a0d0b65251a04e6aa5230da17b2405b6"; // ganti dengan milikmu
 const redirect_uri = "https://esta-music.vercel.app"; // Pastikan cocok
 
-export const scope = "user-read-private";
+export const scope = "user-read-private user-top-read streaming";
 
 function base64urlencode(a) {
   return btoa(String.fromCharCode(...new Uint8Array(a)))
