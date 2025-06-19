@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { createAuthUrl, getTokenFromCode } from "./auth";
+import { createAuthUrl, getTokenFromCode } from "./auth.js";
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem("spotify_token") || "");
