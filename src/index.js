@@ -15,7 +15,7 @@ root.render(
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/player" element={<Player />} />
-        <Route path="/playlist" element={<Playlist />} />
+        <Route path="/playlist/:playlistId" element={<Playlist />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
