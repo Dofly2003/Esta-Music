@@ -71,11 +71,31 @@ function Home() {
             (err.response?.data?.error?.message || err.message)
           );
         }
-}
+      }
     };
 
     fetchAlbumsFromTopTracks();
   }, [token]);
+
+  // Setelah useEffect untuk fetchAlbumsFromTopTracks()
+  useEffect(() => {
+    if (token) {
+      axios.get("https://api.spotify.com/v1/me", {
+        headers: { Authorization: `Bearer ${token}` }
+      }).then((res) => {
+        console.log("👤 User Info:", res.data);
+      });
+
+      axios.get("https://api.spotify.com/v1/me/top/tracks?limit=5", {
+        headers: { Authorization: `Bearer ${token}` }
+      }).then((res) => {
+        console.log("🎧 Top Tracks:", res.data.items);
+      }).catch((err) => {
+        console.error("❌ Top Tracks Error:", err.response?.data || err.message);
+      });
+    }
+  }, [token]);
+
 
   // Search logic (tidak berubah)
   useEffect(() => {
