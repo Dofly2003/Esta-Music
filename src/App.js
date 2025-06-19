@@ -1,49 +1,30 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { createAuthUrl } from "./auth";
-
-const clientId = "SPOTIFY_CLIENT_ID_KAMU"; // GANTI dengan client ID kamu
-const redirectUri = "https://esta-music.vercel.app"; // Sesuai yang kamu daftarkan di Spotify dashboard
+import { createAuthUrl, getTokenFromCode } from "./auth";
 
 function App() {
-  const [tracks, setTracks] = useState([]);
   const [token, setToken] = useState(localStorage.getItem("spotify_token") || "");
+  const [tracks, setTracks] = useState([]);
 
-  // Ambil code dari URL & tukar dengan access_token
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get("code");
+    const code = new URLSearchParams(window.location.search).get("code");
 
     if (code && !token) {
-      const codeVerifier = localStorage.getItem("spotify_code_verifier");
-
-      const body = new URLSearchParams({
-        grant_type: "authorization_code",
-        code,
-        redirect_uri: redirectUri,
-        client_id: clientId,
-        code_verifier: codeVerifier,
-      });
-
-      fetch("https://accounts.spotify.com/api/token", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: body.toString(),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.access_token) {
-            localStorage.setItem("spotify_token", data.access_token);
-            setToken(data.access_token);
-            window.history.replaceState({}, document.title, "/"); // bersihkan URL
-          } else {
-            console.error("Token exchange failed", data);
+      (async () => {
+        try {
+          const accessToken = await getTokenFromCode(code);
+          if (accessToken) {
+            localStorage.setItem("spotify_token", accessToken);
+            setToken(accessToken);
+            window.history.replaceState({}, "", "/"); // Bersihkan URL dari ?code=
           }
-        });
+        } catch (error) {
+          console.error("Failed to get access token", error);
+        }
+      })();
     }
   }, [token]);
 
-  // Ambil top track Spotify user
   useEffect(() => {
     if (!token) return;
 
@@ -56,7 +37,7 @@ function App() {
         });
         setTracks(res.data.items);
       } catch (error) {
-        console.error("Error fetching tracks", error);
+        console.error("Failed to fetch top tracks", error);
         localStorage.removeItem("spotify_token");
         setToken("");
       }
@@ -65,33 +46,29 @@ function App() {
     fetchTopTracks();
   }, [token]);
 
-  // Belum login
   if (!token) {
     return (
       <div className="h-screen flex items-center justify-center bg-black text-white">
-        <div className="h-screen flex items-center justify-center bg-black text-white">
-          <button
-            onClick={async () => {
-              const authUrl = await createAuthUrl(); // ← panggil fungsi buat auth URL
-              window.location.href = authUrl; // redirect ke login Spotify
-            }}
-            className="bg-green-500 hover:bg-green-600 px-6 py-3 rounded text-lg font-bold"
-          >
-            Login with Spotify
-          </button>
-        </div>
+        <button
+          onClick={async () => {
+            const authUrl = await createAuthUrl();
+            window.location.href = authUrl;
+          }}
+          className="bg-green-500 hover:bg-green-600 px-6 py-3 rounded text-lg font-bold"
+        >
+          Login with Spotify
+        </button>
       </div>
     );
   }
 
-  // Sudah login dan tampilkan lagu
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">🎵 Top 5 Spotify Tracks</h1>
+      <h1 className="text-2xl font-bold mb-4">🎧 Top 5 Spotify Tracks</h1>
       <div className="grid gap-4">
-        {tracks.map((track, i) => (
+        {tracks.map((track, index) => (
           <div
-            key={i}
+            key={index}
             className="bg-gray-100 p-4 rounded flex items-center gap-4 shadow"
           >
             <img
