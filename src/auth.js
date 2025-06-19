@@ -1,5 +1,5 @@
 const clientId = "a0d0b65251a04e6aa5230da17b2405b6"; // ganti dengan milikmu
-const redirectUri = "https://esta-music.vercel.app"; // HARUS sama persis dengan yang didaftarkan
+const redirectUri = "https://esta-music.vercel.app"; // ← Sesuai dengan yang kamu daftarkan
 
 const generateRandomString = (length) => {
   const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
