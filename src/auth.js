@@ -28,7 +28,10 @@ export const createAuthUrl = async () => {
     "user-read-private",
     "user-read-email",
     "user-top-read",
+    "playlist-read-private",
+    "playlist-read-collaborative"
   ];
+
 
   const params = new URLSearchParams({
     response_type: "code",
