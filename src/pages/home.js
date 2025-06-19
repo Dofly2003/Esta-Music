@@ -1,47 +1,129 @@
 import React, { useEffect, useState } from "react";
+import { createAuthUrl, getTokenFromCode } from "../auth.js";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 function Home() {
-  const [tracks, setTracks] = useState([]);
-  const token = localStorage.getItem("spotify_token");
-  const navigate = useNavigate();
+  const [token, setToken] = useState(localStorage.getItem("spotify_token") || "");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
 
+  // Cek token dari URL
   useEffect(() => {
-    if (!token) {
-      navigate("/");
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+
+    if (code && !token) {
+      getTokenFromCode(code).then((newToken) => {
+        if (newToken) {
+          localStorage.setItem("spotify_token", newToken);
+          setToken(newToken);
+        }
+        window.history.replaceState({}, document.title, "/");
+      });
+    }
+  }, [token]);
+
+  // Search API
+  useEffect(() => {
+    if (!token || !searchTerm.trim()) {
+      setSearchResults([]);
       return;
     }
 
-    axios
-      .get("https://api.spotify.com/v1/me/top/tracks?limit=10", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => {
-        setTracks(res.data.items);
-      })
-      .catch((err) => {
-        if (err.response?.status === 403) {
-          setTracks([]);
-        }
-      });
-  }, []);
+    const timeout = setTimeout(async () => {
+      try {
+        const res = await axios.get(
+          `https://api.spotify.com/v1/search?q=${encodeURIComponent(searchTerm)}&type=track,album,artist&limit=10`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setSearchResults(res.data.tracks?.items || []);
+      } catch (err) {
+        console.error("Search error:", err);
+      }
+    }, 500); // debounce
+
+    return () => clearTimeout(timeout);
+  }, [searchTerm, token]);
+
+  // Handle Login
+  const handleLogin = async () => {
+    const authUrl = await createAuthUrl();
+    window.location.href = authUrl;
+  };
+
+  // Handle Logout
+  const handleLogout = () => {
+    localStorage.removeItem("spotify_token");
+    setToken("");
+    setSearchResults([]);
+  };
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">🎧 Top Tracks</h1>
-      {tracks.map((track) => (
-        <div key={track.id} className="mb-4">
-          <p>{track.name} - {track.artists[0].name}</p>
+    <div className="min-h-screen bg-gray-100 p-6">
+      {!token ? (
+        <div className="flex justify-center items-center h-screen bg-black text-white">
+          <button
+            onClick={handleLogin}
+            className="bg-green-500 px-6 py-3 rounded-lg text-lg font-bold hover:bg-green-600"
+          >
+            Login with Spotify
+          </button>
         </div>
-      ))}
+      ) : (
+        <>
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold">🎵 Spotify Search</h1>
+            <div className="flex gap-4">
+              <Link to="/player" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                Go to Player
+              </Link>
+              <button onClick={handleLogout} className="text-red-500 underline">Logout</button>
+            </div>
+          </div>
 
-      <button
-        className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
-        onClick={() => navigate("/player")}
-      >
-        Go to Player
-      </button>
+          {/* Search Input */}
+          <input
+            type="text"
+            placeholder="Search album, artist, or song..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full p-3 border rounded mb-6"
+          />
+
+          {/* Search Results */}
+          <div className="space-y-6">
+            {searchResults.map((track) => (
+              <div key={track.id} className="bg-white p-4 rounded shadow">
+                <div className="flex items-center gap-4">
+                  <img
+                    src={track.album.images[0]?.url}
+                    alt={track.name}
+                    className="w-16 h-16 rounded"
+                  />
+                  <div>
+                    <h2 className="font-bold text-lg">{track.name}</h2>
+                    <p className="text-gray-600">{track.artists.map(a => a.name).join(", ")}</p>
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <iframe
+                    src={`https://open.spotify.com/embed/track/${track.id}`}
+                    width="100%"
+                    height="80"
+                    frameBorder="0"
+                    allowtransparency="true"
+                    allow="encrypted-media"
+                    title={track.name}
+                  ></iframe>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
