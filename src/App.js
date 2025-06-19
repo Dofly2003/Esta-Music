@@ -20,20 +20,12 @@ function App() {
 
     if (code && !token) {
       getTokenFromCode(code).then((newToken) => {
-        console.log("✅ New token received:", newToken);
-
         if (newToken) {
           localStorage.setItem("spotify_token", newToken);
           setToken(newToken);
-          window.history.replaceState({}, document.title, "/");
-        } else {
-          console.warn("❌ Token gagal didapat. Mungkin code sudah expired.");
-          localStorage.removeItem("spotify_token");
-          localStorage.removeItem("spotify_code_verifier");
-          window.location.href = "/";
         }
+        window.history.replaceState({}, document.title, "/");
       });
-
     }
   }, [token]);
 
@@ -52,8 +44,9 @@ function App() {
         setArtists(artistRes.data.items);
         setTracks(trackRes.data.items);
       } catch (err) {
-        console.error("Fetch top error:", err);
+        console.error("Fetch top error:", err.response?.data || err);
         localStorage.removeItem("spotify_token");
+        localStorage.removeItem("spotify_code_verifier");
         setToken("");
       }
     };
@@ -145,7 +138,7 @@ function App() {
         );
         setSearchResults(res.data.tracks?.items || []);
       } catch (err) {
-        console.error("Search failed:", err);
+        console.error("Search failed:", err.response?.data || err);
       }
     };
 
@@ -162,7 +155,9 @@ function App() {
   // --- Handle Logout ---
   const handleLogout = () => {
     localStorage.removeItem("spotify_token");
+    localStorage.removeItem("spotify_code_verifier");
     setToken("");
+    window.location.href = "/";
   };
 
   // --- UI ---
@@ -181,9 +176,20 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
-      <div className="flex justify-between mb-4">
+      <div className="flex justify-between mb-4 items-center">
         <h1 className="text-2xl font-bold">🎧 Spotify Dashboard</h1>
-        <button onClick={handleLogout} className="text-red-500 underline">Logout</button>
+        <div className="flex gap-4 items-center">
+          <button onClick={handleLogout} className="text-red-500 underline">Logout</button>
+          <button
+            onClick={() => {
+              localStorage.clear();
+              window.location.reload();
+            }}
+            className="text-blue-500 underline text-sm"
+          >
+            Reset App
+          </button>
+        </div>
       </div>
 
       {/* --- Search Input --- */}
