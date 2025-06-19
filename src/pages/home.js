@@ -15,23 +15,147 @@ function Home() {
 
   const navigate = useNavigate();
 
-  // ... (semua useEffect dan handler tetap seperti sebelumnya)
+  // === LOGIC TETAP ===
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    if (code && !token) {
+      getTokenFromCode(code).then((newToken) => {
+        if (newToken) {
+          localStorage.setItem("spotify_token", newToken);
+          setToken(newToken);
+        }
+        window.history.replaceState({}, document.title, "/");
+      });
+    }
+  }, [token]);
 
-  // ... (handleLogin, handleLogout, handleSearchClick tetap seperti sebelumnya)
+  useEffect(() => {
+    if (!token) return;
+    axios
+      .get("https://api.spotify.com/v1/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => setUser(res.data))
+      .catch(() => setUser(null));
+  }, [token]);
 
+  useEffect(() => {
+    if (!token) return;
+    const fetchAlbumsFromTopTracks = async () => {
+      try {
+        const res = await axios.get(
+          "https://api.spotify.com/v1/me/top/tracks?limit=20",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (!res.data.items || res.data.items.length === 0) {
+          setInfo("Top tracks tidak ditemukan, menampilkan album random.");
+          fetchRandomAlbums();
+          return;
+        }
+        const trackAlbums = res.data.items.map((track) => track.album);
+        const uniqueAlbums = Array.from(
+          new Map(trackAlbums.map((album) => [album.id, album])).values()
+        );
+        setAlbums(uniqueAlbums);
+        setInfo("");
+      } catch (err) {
+        setInfo("Top tracks tidak ditemukan, menampilkan album random.");
+        fetchRandomAlbums();
+      }
+    };
+    const fetchRandomAlbums = async () => {
+      try {
+        const res = await axios.get(
+          "https://api.spotify.com/v1/browse/new-releases?limit=12",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setAlbums(res.data.albums.items);
+      } catch (err) {
+        if (err.response?.status === 403) {
+          setError("Akses ditolak. Silakan logout lalu login ulang dan izinkan akses ke Spotify Top Tracks.");
+        } else {
+          setError(
+            "Gagal mengambil album dari track kamu. " +
+            (err.response?.data?.error?.message || err.message)
+          );
+        }
+      }
+    };
+    fetchAlbumsFromTopTracks();
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    axios
+      .get("https://api.spotify.com/v1/browse/new-releases?limit=10", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => {
+        setTrendingAlbums(res.data.albums.items || []);
+      })
+      .catch(() => setTrendingAlbums([]));
+  }, [token]);
+
+  useEffect(() => {
+    if (!token || !searchTerm.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    const timeout = setTimeout(async () => {
+      try {
+        const res = await axios.get(
+          `https://api.spotify.com/v1/search?q=${encodeURIComponent(searchTerm)}&type=album,artist,track&limit=10`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const albums = res.data.albums ? res.data.albums.items : [];
+        const artists = res.data.artists ? res.data.artists.items : [];
+        const tracks = res.data.tracks ? res.data.tracks.items : [];
+        setSearchResults([
+          ...albums.map(a => ({ ...a, _type: "album" })),
+          ...artists.map(a => ({ ...a, _type: "artist" })),
+          ...tracks.map(a => ({ ...a, _type: "track" })),
+        ]);
+      } catch (err) {
+        console.error("Search error:", err);
+      }
+    }, 500);
+    return () => clearTimeout(timeout);
+  }, [searchTerm, token]);
+
+  const handleLogin = async () => {
+    const authUrl = await createAuthUrl();
+    window.location.href = authUrl;
+  };
+  const handleLogout = () => {
+    localStorage.removeItem("spotify_token");
+    setToken("");
+    setSearchResults([]);
+  };
+  const handleSearchClick = (item) => {
+    if (item._type === "album") navigate(`/album/${item.id}`);
+    else if (item._type === "artist") navigate(`/artist/${item.id}`);
+    else if (item._type === "track" && item.album?.id) navigate(`/album/${item.album.id}`);
+  };
+
+  // === INTERIOR DEKORASI STARTS HERE ===
   return (
-    <div className="min-h-screen w-full fixed top-0 left-0 z-0 font-sans">
-      {/* Dekorasi Background: Gradient & Circle */}
+    <div className="fixed inset-0 w-full h-full bg-black">
+      {/* Dekorasi background: gradient & abstract circles */}
       <div className="fixed inset-0 z-0 pointer-events-none select-none">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#143c26] via-black to-[#1db954] opacity-95"></div>
-        <svg className="absolute -top-32 -left-32 w-[500px] h-[500px] opacity-15" viewBox="0 0 800 800">
+        <div className="absolute inset-0 bg-gradient-to-br from-green-900 via-black to-[#1db954] opacity-95"></div>
+        <svg className="absolute -top-40 -left-40 w-[600px] h-[600px] opacity-20" viewBox="0 0 800 800">
           <circle cx="400" cy="400" r="400" fill="#1db954" />
         </svg>
-        <svg className="absolute bottom-0 right-0 w-[450px] h-[450px] opacity-10" viewBox="0 0 800 800">
+        <svg className="absolute bottom-0 right-0 w-[480px] h-[480px] opacity-10" viewBox="0 0 800 800">
           <circle cx="400" cy="400" r="400" fill="#fff" />
         </svg>
+        {/* "Floating notes" */}
+        <span className="absolute left-20 top-10 text-5xl text-white/30 animate-bounce-slow">🎶</span>
+        <span className="absolute right-36 bottom-12 text-6xl text-green-400/30 animate-bounce">🎹</span>
+        <span className="absolute left-1/2 top-1/3 text-4xl text-white/40 animate-pulse">🎼</span>
       </div>
-
+      {/* Content */}
       <div className="relative z-10 min-h-screen flex flex-col items-center justify-start">
         {/* LOGIN PAGE */}
         {!token ? (
@@ -76,7 +200,7 @@ function Home() {
           </div>
         ) : (
           <>
-            {/* HEADER & SEARCH */}
+            {/* HEADER */}
             <div className="flex justify-between items-center w-full max-w-6xl mt-8 mb-6 px-4 md:px-0">
               <div className="flex items-center gap-4">
                 <h1 className="text-3xl font-extrabold text-white drop-shadow-lg tracking-wide select-none">
@@ -97,16 +221,15 @@ function Home() {
                 <button onClick={handleLogout} className="text-red-500 underline font-semibold text-lg">Logout</button>
               </div>
             </div>
-
+            {/* SEARCH */}
             <div className="w-full flex flex-col items-center">
               <input
                 type="text"
                 placeholder="Search track, album, or artist..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full max-w-2xl p-4 bg-white/90 rounded-xl border border-green-200 shadow focus:ring-2 focus:ring-green-400 focus:outline-none text-lg mb-8 transition"
+                className="w-full max-w-2xl p-4 bg-white/80 rounded-xl border border-green-200 shadow focus:ring-2 focus:ring-green-400 focus:outline-none text-lg mb-8 transition"
               />
-
               {/* SEARCH RESULTS */}
               {searchResults.length > 0 && (
                 <div className="mb-10 w-full max-w-4xl">
@@ -163,7 +286,6 @@ function Home() {
                   </div>
                 </div>
               )}
-
               {/* ALBUMS / TRENDS */}
               {albums.length > 0 && (
                 <div className="mb-10 w-full max-w-6xl">
