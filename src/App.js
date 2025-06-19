@@ -43,6 +43,11 @@ function App() {
         setArtists(artistRes.data.items);
         setTracks(trackRes.data.items);
       } catch (err) {
+         if (err.response?.status === 403) {
+            setArtists([]); // kosongkan tapi tetap render UI
+          } else {
+            console.error(err);
+          }
         console.error("Fetch top error:", err);
         localStorage.removeItem("spotify_token");
         localStorage.removeItem("spotify_code_verifier");
