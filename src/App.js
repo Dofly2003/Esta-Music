@@ -9,15 +9,17 @@ function App() {
   const [isPlaying, setIsPlaying] = useState(false);
 
   // ambil token dari URL saat login
-  useEffect(() => {
-    const hash = window.location.hash;
-    if (hash.includes("access_token")) {
-      const tokenFromUrl = new URLSearchParams(hash.substring(1)).get("access_token");
-      localStorage.setItem("spotify_token", tokenFromUrl);
-      setToken(tokenFromUrl);
-      window.location.hash = "";
-    }
-  }, []);
+useEffect(() => {
+  const hash = window.location.hash;
+    console.log("HASH:", hash);
+  if (hash.includes("access_token")) {
+    const tokenFromUrl = new URLSearchParams(hash.substring(1)).get("access_token");
+    localStorage.setItem("spotify_token", tokenFromUrl);
+    setToken(tokenFromUrl);
+    window.location.hash = "";
+  }
+}, []);
+
 
   // ambil top artist dan lagu dari Spotify
   useEffect(() => {
