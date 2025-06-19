@@ -6,20 +6,23 @@ function Login() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Jika sudah login, langsung ke /
+    // Cek jika sudah login
     const storedToken = localStorage.getItem("spotify_token");
     if (storedToken) {
       navigate("/", { replace: true });
       return;
     }
 
-    // Jika ada ?code= di URL (callback dari Spotify)
+    // Cek kode dari Spotify callback
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
 
     if (code) {
       getTokenFromCode(code).then((token) => {
         if (token) {
+          localStorage.setItem("spotify_token", token);
+          // Bersihkan URL dari ?code=
+          window.history.replaceState({}, document.title, "/");
           navigate("/", { replace: true });
         }
       });

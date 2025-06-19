@@ -14,10 +14,8 @@ function Home() {
   // Redirect to /login if not logged in
   useEffect(() => {
     if (!token) {
-      navigate("/login");
-      return;
+      navigate("/login", { replace: true });
     }
-    // ...fetching logic lain (next effect)
   }, [token, navigate]);
 
   // Handle Spotify login callback
