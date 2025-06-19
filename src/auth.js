@@ -1,30 +1,22 @@
 const clientId = "a0d0b65251a04e6aa5230da17b2405b6"; // ganti dengan milikmu
-const redirect_uri = "https://esta-music.vercel.app";
+const redirect_uri = "https://esta-music.vercel.app"; // Pastikan cocok
 
-export const scope = [
-  "user-top-read",
-  "user-read-playback-state",
-  "user-modify-playback-state",
-  "user-read-currently-playing",
-  "streaming",
-  "playlist-read-private",
-  "user-library-read"
-].join(" ");
+export const scope = "user-read-private";
 
 function base64urlencode(a) {
-  return btoa(String.fromCharCode.apply(null, new Uint8Array(a)))
+  return btoa(String.fromCharCode(...new Uint8Array(a)))
     .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
 async function sha256(plain) {
   const encoder = new TextEncoder();
   const data = encoder.encode(plain);
-  return window.crypto.subtle.digest("SHA-256", data);
+  return await crypto.subtle.digest("SHA-256", data);
 }
 
 export async function createAuthUrl() {
   const codeVerifier = Array.from(crypto.getRandomValues(new Uint8Array(64)))
-    .map((x) => ("0" + x.toString(16)).slice(-2))
+    .map(x => ("0" + x.toString(16)).slice(-2))
     .join("");
   localStorage.setItem("spotify_code_verifier", codeVerifier);
 
@@ -45,7 +37,6 @@ export async function createAuthUrl() {
 
 export async function getTokenFromCode(code) {
   const codeVerifier = localStorage.getItem("spotify_code_verifier");
-
   const body = new URLSearchParams({
     client_id: clientId,
     grant_type: "authorization_code",
@@ -61,12 +52,9 @@ export async function getTokenFromCode(code) {
   });
 
   const data = await res.json();
-  console.log("Token response:", data);
-
   if (data.access_token) {
     localStorage.setItem("spotify_token", data.access_token);
     return data.access_token;
   }
-
   return null;
 }
