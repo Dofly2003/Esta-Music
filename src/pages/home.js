@@ -1,17 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { createAuthUrl, getTokenFromCode } from "../auth";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 function Home() {
   const [token, setToken] = useState(localStorage.getItem("spotify_token") || "");
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [albums, setAlbums] = useState([]);
-  const [trendingAlbums, setTrendingAlbums] = useState([]); // BARU: trending state
+  const [trendingAlbums, setTrendingAlbums] = useState([]);
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
   const [user, setUser] = useState(null);
+
+  const navigate = useNavigate();
 
   // Handle Spotify login callback
   useEffect(() => {
@@ -92,7 +94,6 @@ function Home() {
   // Fetch trending albums (misal dari featured playlists atau new releases lain)
   useEffect(() => {
     if (!token) return;
-    // Bisa juga ganti endpoint sesuai kebutuhan tren
     axios
       .get("https://api.spotify.com/v1/browse/new-releases?limit=10", {
         headers: { Authorization: `Bearer ${token}` },
@@ -103,7 +104,7 @@ function Home() {
       .catch(() => setTrendingAlbums([]));
   }, [token]);
 
-  // Search logic (tidak berubah)
+  // Search logic (DIPERBAIKI: album/artist clickable)
   useEffect(() => {
     if (!token || !searchTerm.trim()) {
       setSearchResults([]);
@@ -113,10 +114,18 @@ function Home() {
     const timeout = setTimeout(async () => {
       try {
         const res = await axios.get(
-          `https://api.spotify.com/v1/search?q=${encodeURIComponent(searchTerm)}&type=track&limit=10`,
+          `https://api.spotify.com/v1/search?q=${encodeURIComponent(searchTerm)}&type=album,artist,track&limit=10`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        setSearchResults(res.data.tracks.items);
+        // Gabungkan hasil album, artist, dan track
+        const albums = res.data.albums ? res.data.albums.items : [];
+        const artists = res.data.artists ? res.data.artists.items : [];
+        const tracks = res.data.tracks ? res.data.tracks.items : [];
+        setSearchResults([
+          ...albums.map(a => ({ ...a, _type: "album" })),
+          ...artists.map(a => ({ ...a, _type: "artist" })),
+          ...tracks.map(a => ({ ...a, _type: "track" })),
+        ]);
       } catch (err) {
         console.error("Search error:", err);
       }
@@ -134,6 +143,19 @@ function Home() {
     localStorage.removeItem("spotify_token");
     setToken("");
     setSearchResults([]);
+  };
+
+  // Redirect logic for album or artist from search
+  const handleSearchClick = (item) => {
+    if (item._type === "album") {
+      navigate(`/album/${item.id}`);
+    } else if (item._type === "artist") {
+      navigate(`/artist/${item.id}`);
+    }
+    // For track: navigate to album page
+    else if (item._type === "track" && item.album?.id) {
+      navigate(`/album/${item.album.id}`);
+    }
   };
 
   return (
@@ -173,7 +195,7 @@ function Home() {
 
           <input
             type="text"
-            placeholder="Search track..."
+            placeholder="Search track, album, or artist..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full p-3 border rounded mb-6"
@@ -183,25 +205,52 @@ function Home() {
             <div className="mb-6">
               <h2 className="text-xl font-bold mb-2">🔍 Search Results</h2>
               <div className="space-y-4">
-                {searchResults.map((track) => (
-                  <div key={track.id} className="bg-white p-4 rounded shadow">
+                {searchResults.map((item) => (
+                  <div
+                    key={item.id}
+                    className="bg-white p-4 rounded shadow cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSearchClick(item)}
+                  >
                     <div className="flex items-center gap-4">
-                      <img src={track.album.images[0]?.url} alt={track.name} className="w-16 h-16 rounded" />
+                      <img
+                        src={
+                          item.images?.[0]?.url
+                          || item.album?.images?.[0]?.url
+                          || "/default-avatar.png"
+                        }
+                        alt={item.name || item.title}
+                        className="w-16 h-16 rounded"
+                      />
                       <div>
-                        <h3 className="font-bold">{track.name}</h3>
-                        <p className="text-sm text-gray-600">{track.artists.map((a) => a.name).join(", ")}</p>
+                        <h3 className="font-bold">
+                          {item.name || item.title}
+                          {item._type === "album" && <span className="ml-2 text-xs bg-green-200 text-green-900 px-2 rounded">Album</span>}
+                          {item._type === "artist" && <span className="ml-2 text-xs bg-blue-200 text-blue-900 px-2 rounded">Artist</span>}
+                          {item._type === "track" && <span className="ml-2 text-xs bg-purple-200 text-purple-900 px-2 rounded">Track</span>}
+                        </h3>
+                        {item.artists && (
+                          <p className="text-sm text-gray-600">
+                            {item.artists.map((a) => a.name).join(", ")}
+                          </p>
+                        )}
+                        {item._type === "artist" && (
+                          <p className="text-sm text-gray-600">{item.genres && item.genres.join(", ")}</p>
+                        )}
                       </div>
                     </div>
-                    <div className="mt-3">
-                      <iframe
-                        src={`https://open.spotify.com/embed/track/${track.id}`}
-                        width="100%"
-                        height="80"
-                        frameBorder="0"
-                        allow="encrypted-media"
-                        title={track.name}
-                      ></iframe>
-                    </div>
+                    {/* Track preview if type is track */}
+                    {item._type === "track" && (
+                      <div className="mt-3">
+                        <iframe
+                          src={`https://open.spotify.com/embed/track/${item.id}`}
+                          width="100%"
+                          height="80"
+                          frameBorder="0"
+                          allow="encrypted-media"
+                          title={item.name}
+                        ></iframe>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
