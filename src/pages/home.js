@@ -9,6 +9,7 @@ function Home() {
   const [searchResults, setSearchResults] = useState([]);
   const [albums, setAlbums] = useState([]);
   const [error, setError] = useState("");
+  const [info, setInfo] = useState(""); // Tambahan: info untuk album random
 
   // Handle Spotify login callback
   useEffect(() => {
@@ -26,28 +27,46 @@ function Home() {
     }
   }, [token]);
 
-
-  // Fetch top tracks, then extract unique albums
+  // Fetch top tracks, fallback ke random album jika gagal/kosong
   useEffect(() => {
     if (!token) return;
-
     const fetchAlbumsFromTopTracks = async () => {
       try {
         const res = await axios.get(
           "https://api.spotify.com/v1/me/top/tracks?limit=20",
           { headers: { Authorization: `Bearer ${token}` } }
         );
+        if (!res.data.items || res.data.items.length === 0) {
+          // Tidak ada top tracks, ambil album random
+          setInfo("Top tracks tidak ditemukan, menampilkan album random.");
+          fetchRandomAlbums();
+          return;
+        }
         const trackAlbums = res.data.items.map((track) => track.album);
-
-        // Filter unique albums by album.id
         const uniqueAlbums = Array.from(
           new Map(trackAlbums.map((album) => [album.id, album])).values()
         );
-
         setAlbums(uniqueAlbums);
+        setInfo(""); // Reset info jika dapat top tracks
       } catch (err) {
-        console.error("Fetch top tracks/albums error:", err);
-        setError("Gagal mengambil album dari track kamu.");
+        setInfo("Top tracks tidak ditemukan, menampilkan album random.");
+        fetchRandomAlbums();
+      }
+    };
+
+    // Fungsi ambil album random (new releases)
+    const fetchRandomAlbums = async () => {
+      try {
+        const res = await axios.get(
+          "https://api.spotify.com/v1/browse/new-releases?limit=12",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setAlbums(res.data.albums.items);
+      } catch (err) {
+        setError(
+          "Gagal mengambil album dari track kamu. " +
+          (err.response?.data?.error?.message || err.message)
+        );
       }
     };
 
@@ -149,7 +168,10 @@ function Home() {
 
           {albums.length > 0 && (
             <div className="mb-8">
-              <h2 className="text-xl font-bold mb-4">⭐ Album from Your Top Tracks</h2>
+              <h2 className="text-xl font-bold mb-4">
+                {info ? "⭐ Album Random" : "⭐ Album from Your Top Tracks"}
+              </h2>
+              {info && <div className="mb-2 text-yellow-700 font-semibold">{info}</div>}
               <div className="grid grid-cols-2 gap-4">
                 {albums.map((album) => (
                   <Link
