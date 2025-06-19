@@ -143,6 +143,16 @@ function Home() {
             className="w-full p-3 border rounded mb-4"
           />
 
+          {/* Tombol ke halaman playlist */}
+          <div className="mb-6">
+            <Link
+              to="/playlists"
+              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 font-semibold"
+            >
+              🎼 Your Playlists
+            </Link>
+          </div>
+
           {searchResults.length > 0 && (
             <div className="mb-4">
               <button
