@@ -1,5 +1,5 @@
 const clientId = "a0d0b65251a04e6aa5230da17b2405b6"; // ganti dengan milikmu
-const redirectUri = "https://esta-music.vercel.app"; // sesuai yang didaftarkan di Spotify Dashboard
+const redirectUri = "https://esta-music.vercel.app";
 
 const generateRandomString = (length) => {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -27,44 +27,15 @@ export const createAuthUrl = async () => {
   const scopes = [
     "user-read-private",
     "user-read-email",
-    "user-top-read",
-    "playlist-read-private",
-    "playlist-read-collaborative"
+    "user-top-read"
   ];
 
-
   const params = new URLSearchParams({
-    response_type: "code",
+    response_type: "token",
     client_id: clientId,
-    scope: scopes.join(" "),
     redirect_uri: redirectUri,
-    code_challenge_method: "S256",
-    code_challenge: codeChallenge,
+    scope: scopes.join(" "),
   });
 
   return `https://accounts.spotify.com/authorize?${params.toString()}`;
-};
-
-// ⬇️ Tambahkan bagian ini agar tidak error saat di-import
-export const getTokenFromCode = async (code) => {
-  const codeVerifier = localStorage.getItem("spotify_code_verifier");
-
-  const body = new URLSearchParams({
-    grant_type: "authorization_code",
-    code,
-    redirect_uri: redirectUri,
-    client_id: clientId,
-    code_verifier: codeVerifier,
-  });
-
-  const response = await fetch("https://accounts.spotify.com/api/token", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: body.toString(),
-  });
-
-  const data = await response.json();
-  return data.access_token;
 };
