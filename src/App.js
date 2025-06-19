@@ -69,15 +69,17 @@ function App() {
   if (!token) {
     return (
       <div className="h-screen flex items-center justify-center bg-black text-white">
-        <button
-          onClick={async () => {
-            const authUrl = await createAuthUrl();
-            window.location.href = authUrl;
-          }}
-          className="bg-green-500 hover:bg-green-600 px-6 py-3 rounded text-lg font-bold"
-        >
-          Login with Spotify
-        </button>
+        <div className="h-screen flex items-center justify-center bg-black text-white">
+          <button
+            onClick={async () => {
+              const authUrl = await createAuthUrl(); // ← panggil fungsi buat auth URL
+              window.location.href = authUrl; // redirect ke login Spotify
+            }}
+            className="bg-green-500 hover:bg-green-600 px-6 py-3 rounded text-lg font-bold"
+          >
+            Login with Spotify
+          </button>
+        </div>
       </div>
     );
   }
