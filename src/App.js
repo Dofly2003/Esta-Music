@@ -22,22 +22,23 @@ function App() {
   useEffect(() => {
     if (!token) return;
 
-    const fetchTopTracks = async () => {
+    const fetchPlaylists = async () => {
       try {
-        const res = await axios.get("https://api.spotify.com/v1/me/top/tracks?limit=5", {
+        const res = await axios.get("https://api.spotify.com/v1/me/playlists", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-        setTracks(res.data.items);
+        setTracks(res.data.items); // masih pakai nama state 'tracks'
       } catch (error) {
-        console.error("Error fetching tracks", error);
+        console.error("Error fetching playlists", error);
         localStorage.removeItem("spotify_token");
         setToken("");
       }
     };
 
-    fetchTopTracks();
+
+    fetchPlaylists();
   }, [token]);
 
   // Jika belum login
