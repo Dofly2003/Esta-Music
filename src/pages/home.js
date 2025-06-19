@@ -166,14 +166,14 @@ function Home() {
             onClick={handleLogin}
             className="bg-green-500 px-6 py-3 rounded-lg text-lg font-bold hover:bg-green-600"
           >
-            Login with Spotify
+            Login with Spotify account 
           </button>
         </div>
       ) : (
         <>
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center gap-4">
-              <h1 className="text-2xl font-bold text-purple-700">🎵 Spotify App</h1>
+              <h1 className="text-2xl font-bold text-purple-700">🎵 Esta Music App</h1>
             </div>
             <div className="flex items-center gap-4">
               {user && (
@@ -186,9 +186,6 @@ function Home() {
                   <span className="font-medium">{user.display_name}</span>
                 </div>
               )}
-              <Link to="/player" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                Go to Player
-              </Link>
               <button onClick={handleLogout} className="text-red-500 underline">Logout</button>
             </div>
           </div>
