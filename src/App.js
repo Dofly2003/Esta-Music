@@ -1,3 +1,4 @@
+// App.js
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { createAuthUrl, getTokenFromCode } from "./auth.js";
@@ -5,6 +6,7 @@ import { createAuthUrl, getTokenFromCode } from "./auth.js";
 function App() {
   const [token, setToken] = useState(localStorage.getItem("spotify_token") || "");
   const [artists, setArtists] = useState([]);
+  const [player, setPlayer] = useState(null);
 
   // Ambil kode dari URL (authorization code)
   useEffect(() => {
@@ -12,7 +14,11 @@ function App() {
     const code = params.get("code");
 
     if (code && !token) {
-      getTokenFromCode(code); // tukar kode dengan access token
+      getTokenFromCode(code).then((newToken) => {
+        if (newToken) {
+          setToken(newToken);
+        }
+      });
     }
   }, [token]);
 
@@ -38,7 +44,35 @@ function App() {
     }
   }, [token]);
 
-  // Login button
+  // Spotify Web Playback SDK (basic player setup)
+  useEffect(() => {
+    if (!token || player) return;
+
+    const script = document.createElement("script");
+    script.src = "https://sdk.scdn.co/spotify-player.js";
+    script.async = true;
+    document.body.appendChild(script);
+
+    window.onSpotifyWebPlaybackSDKReady = () => {
+      const spotifyPlayer = new window.Spotify.Player({
+        name: "Web Player",
+        getOAuthToken: cb => { cb(token); },
+        volume: 0.5
+      });
+
+      spotifyPlayer.addListener('ready', ({ device_id }) => {
+        console.log('Ready with Device ID', device_id);
+      });
+
+      spotifyPlayer.addListener('initialization_error', ({ message }) => {
+        console.error(message);
+      });
+
+      spotifyPlayer.connect();
+      setPlayer(spotifyPlayer);
+    };
+  }, [token, player]);
+
   const handleLogin = async () => {
     const authUrl = await createAuthUrl();
     window.location.href = authUrl;
@@ -59,15 +93,19 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
-      <h1 className="text-2xl font-bold mb-4">🎧 Top Artists & Shuffle Songssssssssssssssssss</h1>
+      <h1 className="text-2xl font-bold mb-4">🎧 Top Artists</h1>
       <ul className="space-y-4">
         {artists.map((artist) => (
           <li key={artist.id} className="flex items-center gap-4 bg-white p-4 rounded shadow">
             <img src={artist.images[0]?.url} alt={artist.name} className="w-16 h-16 rounded-full" />
-            <span className="font-medium text-lg">{artist.name}</span>
+            <div>
+              <div className="font-medium text-lg">{artist.name}</div>
+              <div className="text-sm text-gray-500">Genre: {artist.genres?.[0]}</div>
+            </div>
           </li>
         ))}
       </ul>
+      <p className="mt-6 text-gray-600 text-sm">Note: Web playback requires a Spotify Premium account.</p>
     </div>
   );
 }
