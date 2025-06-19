@@ -1,4 +1,3 @@
-// App.js
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { createAuthUrl, getTokenFromCode } from "./auth.js";
@@ -6,30 +5,25 @@ import { createAuthUrl, getTokenFromCode } from "./auth.js";
 function App() {
   const [token, setToken] = useState(localStorage.getItem("spotify_token") || "");
   const [artists, setArtists] = useState([]);
+  const [tracks, setTracks] = useState([]);
   const [player, setPlayer] = useState(null);
 
-  // Ambil kode dari URL (authorization code)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
 
     if (code && !token) {
       getTokenFromCode(code).then((newToken) => {
-        if (newToken) {
-          setToken(newToken);
-        }
+        if (newToken) setToken(newToken);
       });
     }
   }, [token]);
 
-  // Ambil artist top user jika token ada
   useEffect(() => {
     const fetchTopArtists = async () => {
       try {
         const res = await axios.get("https://api.spotify.com/v1/me/top/artists?limit=5", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
         setArtists(res.data.items);
       } catch (err) {
@@ -39,12 +33,24 @@ function App() {
       }
     };
 
-    if (token) {
-      fetchTopArtists();
-    }
+    if (token) fetchTopArtists();
   }, [token]);
 
-  // Spotify Web Playback SDK (basic player setup)
+  useEffect(() => {
+    const fetchTopTracks = async () => {
+      try {
+        const res = await axios.get("https://api.spotify.com/v1/me/top/tracks?limit=5", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setTracks(res.data.items);
+      } catch (err) {
+        console.error("Track fetch error:", err);
+      }
+    };
+
+    if (token) fetchTopTracks();
+  }, [token]);
+
   useEffect(() => {
     if (!token || player) return;
 
@@ -105,6 +111,20 @@ function App() {
           </li>
         ))}
       </ul>
+
+      <h1 className="text-2xl font-bold mt-8 mb-4">🎵 Top Tracks</h1>
+      <ul className="space-y-4">
+        {tracks.map((track) => (
+          <li key={track.id} className="flex items-center gap-4 bg-white p-4 rounded shadow">
+            <img src={track.album.images[0]?.url} alt={track.name} className="w-16 h-16 rounded" />
+            <div>
+              <div className="font-medium text-lg">{track.name}</div>
+              <div className="text-sm text-gray-500">{track.artists.map(a => a.name).join(", ")}</div>
+            </div>
+          </li>
+        ))}
+      </ul>
+
       <p className="mt-6 text-gray-600 text-sm">Note: Web playback requires a Spotify Premium account.</p>
     </div>
   );
