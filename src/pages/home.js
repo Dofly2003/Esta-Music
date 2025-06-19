@@ -10,6 +10,7 @@ function Home() {
   const [albums, setAlbums] = useState([]);
   const [error, setError] = useState("");
   const [info, setInfo] = useState(""); // Tambahan: info untuk album random
+  const [user, setUser] = useState(null); // Tambahan: user info
 
   // Handle Spotify login callback
   useEffect(() => {
@@ -27,6 +28,17 @@ function Home() {
     }
   }, [token]);
 
+  // Fetch user profile
+  useEffect(() => {
+    if (!token) return;
+    axios
+      .get("https://api.spotify.com/v1/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => setUser(res.data))
+      .catch(() => setUser(null));
+  }, [token]);
+
   // Fetch top tracks, fallback ke random album jika gagal/kosong
   useEffect(() => {
     if (!token) return;
@@ -37,7 +49,6 @@ function Home() {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (!res.data.items || res.data.items.length === 0) {
-          // Tidak ada top tracks, ambil album random
           setInfo("Top tracks tidak ditemukan, menampilkan album random.");
           fetchRandomAlbums();
           return;
@@ -76,26 +87,6 @@ function Home() {
 
     fetchAlbumsFromTopTracks();
   }, [token]);
-
-  // Setelah useEffect untuk fetchAlbumsFromTopTracks()
-  useEffect(() => {
-    if (token) {
-      axios.get("https://api.spotify.com/v1/me", {
-        headers: { Authorization: `Bearer ${token}` }
-      }).then((res) => {
-        console.log("👤 User Info:", res.data);
-      });
-
-      axios.get("https://api.spotify.com/v1/me/top/tracks?limit=5", {
-        headers: { Authorization: `Bearer ${token}` }
-      }).then((res) => {
-        console.log("🎧 Top Tracks:", res.data.items);
-      }).catch((err) => {
-        console.error("❌ Top Tracks Error:", err.response?.data || err.message);
-      });
-    }
-  }, [token]);
-
 
   // Search logic (tidak berubah)
   useEffect(() => {
@@ -144,8 +135,20 @@ function Home() {
       ) : (
         <>
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-purple-700">🎵 Spotify App</h1>
-            <div className="flex gap-4">
+            <div className="flex items-center gap-4">
+              <h1 className="text-2xl font-bold text-purple-700">🎵 Spotify App</h1>
+            </div>
+            <div className="flex items-center gap-4">
+              {user && (
+                <div className="flex items-center gap-2 bg-white px-3 py-1 rounded shadow">
+                  <img
+                    src={user.images?.[0]?.url || "/default-avatar.png"}
+                    alt={user.display_name}
+                    className="w-8 h-8 rounded-full object-cover border"
+                  />
+                  <span className="font-medium">{user.display_name}</span>
+                </div>
+              )}
               <Link to="/player" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
                 Go to Player
               </Link>
@@ -196,16 +199,22 @@ function Home() {
                 {info ? "⭐ Album Random" : "⭐ Album from Your Top Tracks"}
               </h2>
               {info && <div className="mb-2 text-yellow-700 font-semibold">{info}</div>}
-              <div className="grid grid-cols-2 gap-4">
-                {albums.map((album) => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-5">
+                {albums.slice(0, 5).map((album) => (
                   <Link
                     key={album.id}
                     to={`/album/${album.id}`}
-                    className="bg-white rounded shadow p-3 hover:bg-gray-50 block"
+                    className="bg-white rounded-lg shadow flex flex-col items-center p-3 hover:bg-gray-50 transition"
                   >
-                    <img src={album.images[0]?.url} alt={album.name} className="w-full rounded mb-2" />
-                    <div className="font-bold">{album.name}</div>
-                    <div className="text-sm text-gray-500">{album.artists.map(a => a.name).join(", ")}</div>
+                    <img
+                      src={album.images[0]?.url}
+                      alt={album.name}
+                      className="w-36 h-36 object-cover rounded mb-2"
+                    />
+                    <div className="font-bold text-center">{album.name}</div>
+                    <div className="text-sm text-gray-500 text-center">
+                      {album.artists?.map(a => a.name).join(", ")}
+                    </div>
                   </Link>
                 ))}
               </div>
