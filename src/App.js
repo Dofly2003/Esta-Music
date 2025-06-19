@@ -163,19 +163,22 @@ function App() {
       <h1 className="text-2xl font-bold mt-8 mb-4">🎵 Top Tracks</h1>
       <ul className="space-y-4">
         {tracks.map((track) => (
-          <li key={track.id} className="flex items-center gap-4 bg-white p-4 rounded shadow">
+          <li key={track.id} className="flex flex-col md:flex-row items-center gap-4 bg-white p-4 rounded shadow">
             <img src={track.album.images[0]?.url} alt={track.name} className="w-16 h-16 rounded" />
-            <div>
+            <div className="flex-1">
               <div className="font-medium text-lg">{track.name}</div>
               <div className="text-sm text-gray-500">{track.artists.map(a => a.name).join(", ")}</div>
             </div>
-            <button
-              className="ml-auto px-3 py-1 rounded bg-green-500 text-white font-bold hover:bg-green-600"
-              onClick={() => playTrack(track.uri)}
-              disabled={!deviceId}
-            >
-              ▶ Play
-            </button>
+            {/* Widget Spotify Embed */}
+            <iframe
+              src={`https://open.spotify.com/embed/track/${track.id}`}
+              width="120"
+              height="80"
+              frameBorder="0"
+              allow="encrypted-media"
+              title={track.name}
+              style={{ borderRadius: 8, marginLeft: 8 }}
+            />
           </li>
         ))}
       </ul>
