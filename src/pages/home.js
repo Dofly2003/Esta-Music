@@ -8,9 +8,10 @@ function Home() {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [albums, setAlbums] = useState([]);
+  const [trendingAlbums, setTrendingAlbums] = useState([]); // BARU: trending state
   const [error, setError] = useState("");
-  const [info, setInfo] = useState(""); // Tambahan: info untuk album random
-  const [user, setUser] = useState(null); // Tambahan: user info
+  const [info, setInfo] = useState("");
+  const [user, setUser] = useState(null);
 
   // Handle Spotify login callback
   useEffect(() => {
@@ -58,7 +59,7 @@ function Home() {
           new Map(trackAlbums.map((album) => [album.id, album])).values()
         );
         setAlbums(uniqueAlbums);
-        setInfo(""); // Reset info jika dapat top tracks
+        setInfo("");
       } catch (err) {
         setInfo("Top tracks tidak ditemukan, menampilkan album random.");
         fetchRandomAlbums();
@@ -79,13 +80,27 @@ function Home() {
         } else {
           setError(
             "Gagal mengambil album dari track kamu. " +
-            (err.response?.data?.error?.message || err.message)
+              (err.response?.data?.error?.message || err.message)
           );
         }
       }
     };
 
     fetchAlbumsFromTopTracks();
+  }, [token]);
+
+  // Fetch trending albums (misal dari featured playlists atau new releases lain)
+  useEffect(() => {
+    if (!token) return;
+    // Bisa juga ganti endpoint sesuai kebutuhan tren
+    axios
+      .get("https://api.spotify.com/v1/browse/new-releases?limit=10", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => {
+        setTrendingAlbums(res.data.albums.items || []);
+      })
+      .catch(() => setTrendingAlbums([]));
   }, [token]);
 
   // Search logic (tidak berubah)
@@ -218,16 +233,22 @@ function Home() {
                   </Link>
                 ))}
               </div>
-              <h2 className="text-xl font-bold mt-12 mb-4">🔥 Albums Sedang Tren</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-5">
-                {trendingAlbums.map((album) => (
-                  <div key={album.id} className="bg-white rounded-lg shadow flex flex-col items-center p-3 hover:bg-gray-50 transition">
-                    <img src={album.images[0].url} alt={album.name} className="w-32 h-32 object-cover rounded mb-2" />
-                    <div className="font-bold text-center">{album.name}</div>
-                    <div className="text-sm text-gray-500 text-center">{album.artists.map(a => a.name).join(", ")}</div>
+
+              {/* Section Tren */}
+              {trendingAlbums.length > 0 && (
+                <>
+                  <h2 className="text-xl font-bold mt-12 mb-4">🔥 Albums Sedang Tren</h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-5">
+                    {trendingAlbums.map((album) => (
+                      <div key={album.id} className="bg-white rounded-lg shadow flex flex-col items-center p-3 hover:bg-gray-50 transition">
+                        <img src={album.images?.[0]?.url} alt={album.name} className="w-32 h-32 object-cover rounded mb-2" />
+                        <div className="font-bold text-center">{album.name}</div>
+                        <div className="text-sm text-gray-500 text-center">{album.artists?.map(a => a.name).join(", ")}</div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </>
+              )}
             </div>
           )}
 
