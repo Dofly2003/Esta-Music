@@ -16,7 +16,7 @@ root.render(
   <React.StrictMode>
     <BrowserRouter>
       <MusicPlayerProvider>
-        <GlobalAudioPlayer />
+        {/* Route untuk halaman-halaman */}
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/player" element={<Player />} />
@@ -24,6 +24,9 @@ root.render(
           <Route path="/album/:albumId" element={<Album />} />
           <Route path="/artist/:artistId" element={<Artist />} />
         </Routes>
+
+        {/* Floating global audio player di semua halaman */}
+        <GlobalAudioPlayer />
       </MusicPlayerProvider>
     </BrowserRouter>
   </React.StrictMode>

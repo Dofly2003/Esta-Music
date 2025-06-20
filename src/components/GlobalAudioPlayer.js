@@ -1,35 +1,28 @@
-import React, { createContext, useContext, useState, useRef, useEffect } from "react";
+import React from "react";
+import { useMusicPlayer } from "../context/MusicPlayerContext";
 
-const MusicPlayerContext = createContext();
+function GlobalAudioPlayer() {
+  const { currentTrack, isPlaying, togglePlayPause, stopTrack } = useMusicPlayer();
 
-export function MusicPlayerProvider({ children }) {
-  const [currentTrack, setCurrentTrack] = useState(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const audioRef = useRef();
-
-  const playTrack = (track) => {
-    setCurrentTrack(track);
-    setIsPlaying(true);
-  };
-
-  const togglePlay = () => setIsPlaying((prev) => !prev);
-
-  useEffect(() => {
-    if (audioRef.current) {
-      if (isPlaying) audioRef.current.play();
-      else audioRef.current.pause();
-    }
-  }, [isPlaying, currentTrack]);
+  if (!currentTrack) return null;
 
   return (
-    <MusicPlayerContext.Provider value={{
-      currentTrack, isPlaying, playTrack, togglePlay, audioRef, setIsPlaying
-    }}>
-      {children}
-    </MusicPlayerContext.Provider>
+    <div className="fixed bottom-6 right-6 bg-white/90 text-black shadow-xl rounded-xl px-4 py-3 flex items-center gap-4 z-50 w-[300px]">
+      <img
+        src={currentTrack.album?.images?.[0]?.url}
+        alt={currentTrack.name}
+        className="w-12 h-12 rounded-lg"
+      />
+      <div className="flex-1">
+        <div className="font-bold text-sm">{currentTrack.name}</div>
+        <div className="text-xs text-gray-600">{currentTrack.artists.map(a => a.name).join(", ")}</div>
+      </div>
+      <button onClick={togglePlayPause} className="text-xl">
+        {isPlaying ? "⏸" : "▶️"}
+      </button>
+      <button onClick={stopTrack} className="text-lg text-red-600 font-bold">✖</button>
+    </div>
   );
 }
 
-export function useMusicPlayer() {
-  return useContext(MusicPlayerContext);
-}
+export default GlobalAudioPlayer;

@@ -1,35 +1,53 @@
-import React, { createContext, useContext, useState, useRef, useEffect } from "react";
+import React, { createContext, useContext, useState, useRef } from "react";
 
 const MusicPlayerContext = createContext();
 
-export function MusicPlayerProvider({ children }) {
-  const [currentTrack, setCurrentTrack] = useState(null);
+export const useMusicPlayer = () => useContext(MusicPlayerContext);
+
+export const MusicPlayerProvider = ({ children }) => {
+  const [currentTrack, setCurrentTrack] = useState(null); // Info lagu
   const [isPlaying, setIsPlaying] = useState(false);
-  const audioRef = useRef();
+  const audioRef = useRef(new Audio());
 
   const playTrack = (track) => {
-    setCurrentTrack(track);
-    setIsPlaying(true);
+    if (track.preview_url) {
+      audioRef.current.pause();
+      audioRef.current = new Audio(track.preview_url);
+      audioRef.current.play();
+      setCurrentTrack(track);
+      setIsPlaying(true);
+
+      audioRef.current.onended = () => {
+        setIsPlaying(false);
+      };
+    }
   };
 
-  const togglePlay = () => setIsPlaying((prev) => !prev);
-
-  useEffect(() => {
-    if (audioRef.current) {
-      if (isPlaying) audioRef.current.play();
-      else audioRef.current.pause();
+  const togglePlayPause = () => {
+    if (audioRef.current.paused) {
+      audioRef.current.play();
+      setIsPlaying(true);
+    } else {
+      audioRef.current.pause();
+      setIsPlaying(false);
     }
-  }, [isPlaying, currentTrack]);
+  };
+
+  const stopTrack = () => {
+    audioRef.current.pause();
+    setIsPlaying(false);
+    setCurrentTrack(null);
+  };
 
   return (
     <MusicPlayerContext.Provider value={{
-      currentTrack, isPlaying, playTrack, togglePlay, audioRef, setIsPlaying
+      currentTrack,
+      isPlaying,
+      playTrack,
+      togglePlayPause,
+      stopTrack,
     }}>
       {children}
     </MusicPlayerContext.Provider>
   );
-}
-
-export function useMusicPlayer() {
-  return useContext(MusicPlayerContext);
-}
+};
