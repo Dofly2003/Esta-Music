@@ -7,6 +7,7 @@ function Album() {
   const token = localStorage.getItem("spotify_token");
   const [album, setAlbum] = useState(null);
   const [error, setError] = useState("");
+  const [volume, setVolume] = useState(0.5); // Volume state ditambahkan
 
   useEffect(() => {
     if (!token) return;
@@ -26,7 +27,7 @@ function Album() {
 
   return (
     <div className="fixed inset-0 w-full h-full bg-black font-sans">
-      {/* Dekorasi Background: Gradient & Circle */}
+      {/* Dekorasi Background */}
       <div className="fixed inset-0 z-0 pointer-events-none select-none">
         <div className="absolute inset-0 bg-gradient-to-br from-green-900 via-black to-[#1db954] opacity-95"></div>
         <svg className="absolute -top-40 -left-40 w-[600px] h-[600px] opacity-15" viewBox="0 0 800 800">
@@ -35,7 +36,6 @@ function Album() {
         <svg className="absolute bottom-0 right-0 w-[480px] h-[480px] opacity-10" viewBox="0 0 800 800">
           <circle cx="400" cy="400" r="400" fill="#fff" />
         </svg>
-        {/* Floating notes */}
         <span className="absolute left-24 top-20 text-5xl text-white/30 animate-bounce-slow">🎶</span>
         <span className="absolute right-36 bottom-12 text-6xl text-green-400/30 animate-bounce">🎹</span>
         <span className="absolute left-1/2 top-1/3 text-4xl text-white/40 animate-pulse">🎼</span>
@@ -44,10 +44,26 @@ function Album() {
       <div className="relative z-10 min-h-screen flex flex-col items-center justify-start px-4 py-10">
         <Link
           to="/"
-          className="text-green-300 hover:text-green-100 underline mb-8 font-semibold text-lg transition"
+          className="text-green-300 hover:text-green-100 underline mb-4 font-semibold text-lg transition"
         >
           ← Kembali
         </Link>
+
+        {/* 🎚️ Kontrol Volume */}
+        <div className="mb-6 flex items-center gap-4">
+          <label className="text-white">Volume 🎚️</label>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.01"
+            value={volume}
+            onChange={(e) => setVolume(parseFloat(e.target.value))}
+            className="w-40"
+          />
+          <span className="text-white">{Math.round(volume * 100)}%</span>
+        </div>
+
         <div className="flex items-center gap-8 mb-10 bg-white/80 rounded-2xl shadow-xl p-6 backdrop-blur-lg">
           <img
             src={album.images?.[0]?.url}
@@ -98,9 +114,16 @@ function Album() {
                 <div className="font-semibold text-gray-900">{track.name}</div>
                 <div className="text-sm text-gray-600">{track.artists.map(a => a.name).join(", ")}</div>
               </div>
-              {/* Optional: play preview if available */}
+              {/* Audio preview dengan kontrol volume */}
               {track.preview_url && (
-                <audio controls src={track.preview_url} className="h-8">
+                <audio
+                  controls
+                  src={track.preview_url}
+                  className="h-8"
+                  ref={(el) => {
+                    if (el) el.volume = volume;
+                  }}
+                >
                   Your browser does not support the audio element.
                 </audio>
               )}
@@ -108,12 +131,14 @@ function Album() {
           ))}
         </ol>
       </div>
-      {/* Animasi CSS */}
+
+      {/* CSS Animasi */}
       <style>{`
         .animate-fadein { animation: fadein 1.2s cubic-bezier(.57,1.27,.44,.98); }
         @keyframes fadein { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: none; } }
         .animate-pop { animation: pop .6s cubic-bezier(.25,1.7,.5,1.2); }
-        @keyframes pop { 0% { transform: scale(0.9); } 60% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        @keyframes pop { 0% { transform: scale(0.9); } 60% { transform: scale(1.05); } 100% { transform: scale(1); }
+        }
         .animate-bounce-slow { animation: bounce 2.4s infinite; }
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-18px); } }
       `}</style>
