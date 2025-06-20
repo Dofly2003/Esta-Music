@@ -58,12 +58,28 @@ function Artist() {
 
       <div className="max-w-3xl mx-auto">
         {tracks.map((track, index) => (
-          <div key={track.id} className="bg-white/10 backdrop-blur-md rounded-lg p-4 mb-4 flex items-center justify-between hover:bg-white/20 transition">
+          <div
+            key={track.id}
+            className="bg-white/10 backdrop-blur-md rounded-lg p-4 mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between hover:bg-white/20 transition"
+          >
             <div className="flex-1">
               <div className="font-bold text-lg">{index + 1}. {track.name}</div>
-              <div className="text-sm text-gray-300">{track.artists.map(a => a.name).join(", ")}</div>
+              <div className="text-sm text-gray-300 mb-1">
+                {track.artists.map(a => a.name).join(", ")}
+              </div>
+
+              {/* 🔗 Tombol Play Full */}
+              <a
+                href={`https://open.spotify.com/track/${track.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-green-300 hover:text-green-100 underline text-sm"
+              >
+                Play Full ▶️
+              </a>
             </div>
-            <div className="flex items-center gap-4">
+
+            <div className="flex items-center gap-4 mt-4 sm:mt-0 sm:ml-4">
               {track.preview_url ? (
                 <audio
                   controls
@@ -74,7 +90,10 @@ function Artist() {
               ) : (
                 <span className="text-sm text-gray-400">No preview</span>
               )}
-              <div className="text-sm text-gray-300">{Math.floor(track.duration_ms / 60000)}:{String(Math.floor((track.duration_ms % 60000) / 1000)).padStart(2, '0')}</div>
+              <div className="text-sm text-gray-300">
+                {Math.floor(track.duration_ms / 60000)}:
+                {String(Math.floor((track.duration_ms % 60000) / 1000)).padStart(2, "0")}
+              </div>
             </div>
           </div>
         ))}
