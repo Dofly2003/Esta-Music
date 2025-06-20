@@ -22,9 +22,9 @@ export function MusicPlayerProvider({ children }) {
   }, [isPlaying, currentTrack]);
 
   return (
-    <MusicPlayerContext.Provider
-      value={{ currentTrack, isPlaying, playTrack, togglePlay, audioRef, setIsPlaying }}
-    >
+    <MusicPlayerContext.Provider value={{
+      currentTrack, isPlaying, playTrack, togglePlay, audioRef, setIsPlaying
+    }}>
       {children}
     </MusicPlayerContext.Provider>
   );

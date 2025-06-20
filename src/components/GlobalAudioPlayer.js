@@ -1,47 +1,35 @@
-import React from "react";
-import { useMusicPlayer } from "../context/MusicPlayerContext";
+import React, { createContext, useContext, useState, useRef, useEffect } from "react";
 
-export default function GlobalAudioPlayer() {
-  const { currentTrack, isPlaying, togglePlay, audioRef, setIsPlaying } = useMusicPlayer();
+const MusicPlayerContext = createContext();
 
-  if (!currentTrack) return null;
+export function MusicPlayerProvider({ children }) {
+  const [currentTrack, setCurrentTrack] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef();
+
+  const playTrack = (track) => {
+    setCurrentTrack(track);
+    setIsPlaying(true);
+  };
+
+  const togglePlay = () => setIsPlaying((prev) => !prev);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      if (isPlaying) audioRef.current.play();
+      else audioRef.current.pause();
+    }
+  }, [isPlaying, currentTrack]);
 
   return (
-    <div style={{
-      position: "fixed",
-      bottom: 16,
-      left: "50%",
-      transform: "translateX(-50%)",
-      zIndex: 1000,
-      background: "rgba(255,255,255,0.95)",
-      borderRadius: 12,
-      boxShadow: "0 2px 16px rgba(0,0,0,0.15)",
-      padding: 16,
-      display: "flex",
-      alignItems: "center",
-      gap: 12,
-      minWidth: 280,
-      maxWidth: 400
+    <MusicPlayerContext.Provider value={{
+      currentTrack, isPlaying, playTrack, togglePlay, audioRef, setIsPlaying
     }}>
-      <img
-        src={currentTrack.image}
-        alt={currentTrack.title}
-        style={{ width: 48, height: 48, borderRadius: 8, objectFit: "cover" }}
-      />
-      <div style={{ flex: 1 }}>
-        <div style={{ fontWeight: "bold" }}>{currentTrack.title}</div>
-        <div style={{ fontSize: 12, color: "#444" }}>{currentTrack.artist}</div>
-      </div>
-      <button onClick={togglePlay} style={{ fontSize: 24, border: "none", background: "none" }}>
-        {isPlaying ? "⏸️" : "▶️"}
-      </button>
-      <audio
-        ref={audioRef}
-        src={currentTrack.url}
-        onEnded={() => setIsPlaying(false)}
-        style={{ display: "none" }}
-        autoPlay
-      />
-    </div>
+      {children}
+    </MusicPlayerContext.Provider>
   );
+}
+
+export function useMusicPlayer() {
+  return useContext(MusicPlayerContext);
 }

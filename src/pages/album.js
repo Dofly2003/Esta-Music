@@ -1,35 +1,15 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
-
-// Komponen audio player dengan kontrol volume
-function AudioPlayer({ src, volume }) {
-  const audioRef = useRef(null);
-
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume;
-    }
-  }, [volume]);
-
-  return (
-    <audio
-      controls
-      src={src}
-      className="h-8"
-      ref={audioRef}
-    >
-      Your browser does not support the audio element.
-    </audio>
-  );
-}
+import { useMusicPlayer } from "../context/MusicPlayerContext"; // Tambahkan context player global
 
 function Album() {
   const { albumId } = useParams();
   const token = localStorage.getItem("spotify_token");
   const [album, setAlbum] = useState(null);
   const [error, setError] = useState("");
-  const [volume, setVolume] = useState(0.6);
+  const [volume, setVolume] = useState(0.6); // Jika ingin volume global, bisa pakai context juga
+  const { playTrack, currentTrack, isPlaying } = useMusicPlayer(); // Ambil fungsi play dari context
 
   useEffect(() => {
     if (!token) return;
@@ -71,8 +51,9 @@ function Album() {
           ← Kembali
         </Link>
 
-        {/* 🎚️ Volume Control */}
-        {/* <div className="mb-6 flex items-center gap-4">
+        {/* 🎚️ Volume Control (hanya aktifkan jika ingin atur volume global preview, bukan volume player popup) */}
+        {/* 
+        <div className="mb-6 flex items-center gap-4">
           <label className="text-white">Volume 🎚️</label>
           <input
             type="range"
@@ -84,7 +65,8 @@ function Album() {
             className="w-40"
           />
           <span className="text-white">{Math.round(volume * 100)}%</span>
-        </div> */}
+        </div>
+        */}
 
         {/* Info Album */}
         <div className="flex items-center gap-8 mb-10 bg-white/80 rounded-2xl shadow-xl p-6 backdrop-blur-lg">
@@ -138,8 +120,8 @@ function Album() {
           ></iframe>
         </div>
 
-        {/* Track List */}
-        {/* <ol className="space-y-4 w-full max-w-2xl">
+        {/* Track List (diputar via global player, bukan <audio> per track) */}
+        <ol className="space-y-4 w-full max-w-2xl">
           {album.tracks.items.map((track, idx) => (
             <li key={track.id} className="bg-white/90 rounded-xl shadow flex items-center gap-4 p-4 hover:bg-green-50 transition">
               <span className="w-7 text-gray-400 font-bold text-lg">{idx + 1}</span>
@@ -157,14 +139,27 @@ function Album() {
                   ))}
                 </div>
               </div>
-              {track.preview_url && (
-                <AudioPlayer src={track.preview_url} volume={volume} />
+              {track.preview_url ? (
+                <button
+                  onClick={() => playTrack({
+                    url: track.preview_url,
+                    title: track.name,
+                    artist: track.artists.map(a => a.name).join(", "),
+                    image: album.images?.[0]?.url,
+                  })}
+                  className={`px-3 py-1 rounded-full text-white font-semibold bg-green-500 hover:bg-green-700 transition`}
+                >
+                  {(currentTrack && currentTrack.url === track.preview_url && isPlaying)
+                    ? "Pause"
+                    : "Play"}
+                </button>
+              ) : (
+                <span className="text-gray-400 italic text-sm">Preview tidak tersedia</span>
               )}
             </li>
           ))}
-        </ol> */}
+        </ol>
       </div>
-
       <style>{`
         .animate-fadein { animation: fadein 1.2s cubic-bezier(.57,1.27,.44,.98); }
         @keyframes fadein { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: none; } }
