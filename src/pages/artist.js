@@ -38,7 +38,7 @@ function Artist() {
   if (!artist) return <div className="text-white p-8">Memuat artist...</div>;
 
   return (
-    <div className="relative z-10 min-h-screen flex flex-col items-center justify-start px-4 py-10">
+    <div className="min-h-screen bg-gradient-to-br from-red-900 via-black to-red-700 text-white px-4 py-10 font-sans">
       <Link to="/" className="text-green-300 hover:text-green-100 underline mb-4 font-semibold text-lg transition">
         ← Kembali
       </Link>
