@@ -8,11 +8,11 @@ function Album() {
   const token = localStorage.getItem("spotify_token");
   const [album, setAlbum] = useState(null);
   const [error, setError] = useState("");
-
   const { playTrack, currentTrack, isPlaying } = useMusicPlayer();
 
   useEffect(() => {
     if (!token) return;
+
     axios
       .get(`https://api.spotify.com/v1/albums/${albumId}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -25,10 +25,11 @@ function Album() {
   }, [albumId, token]);
 
   if (error) return <div className="p-8 text-red-500">{error}</div>;
-  if (!album) return <div className="p-8 text-white">Memuat album...</div>;
+  if (!album) return <div className="p-8 text-white">Memuat...</div>;
 
   return (
     <div className="fixed inset-0 w-full h-full bg-black font-sans">
+      {/* Background Dekorasi */}
       <div className="fixed inset-0 z-0 pointer-events-none select-none">
         <div className="absolute inset-0 bg-gradient-to-br from-green-900 via-black to-[#1db954] opacity-95"></div>
         <svg className="absolute -top-40 -left-40 w-[600px] h-[600px] opacity-15" viewBox="0 0 800 800">
@@ -50,6 +51,7 @@ function Album() {
           ← Kembali
         </Link>
 
+        {/* Info Album */}
         <div className="flex items-center gap-8 mb-10 bg-white/80 rounded-2xl shadow-xl p-6 backdrop-blur-lg">
           <img
             src={album.images?.[0]?.url}
@@ -66,12 +68,21 @@ function Album() {
                   to={`/artist/${a.id}`}
                   className="font-semibold text-green-600 hover:underline"
                 >
-                  {a.name}{i < album.artists.length - 1 ? ", " : ""}
+                  {a.name}
+                  {i < album.artists.length - 1 ? ", " : ""}
                 </Link>
               ))}
             </div>
             <div className="text-gray-500 text-base">{album.total_tracks} tracks</div>
             <div className="mt-2 flex gap-2 flex-wrap">
+              {album.genres?.map((genre, i) => (
+                <span
+                  key={genre + i}
+                  className="bg-green-200/80 text-green-900 px-2 py-1 rounded-full text-xs mr-2"
+                >
+                  {genre}
+                </span>
+              ))}
               <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs">
                 {album.release_date}
               </span>
@@ -79,73 +90,62 @@ function Album() {
           </div>
         </div>
 
-        <div className="mb-10 w-full max-w-2xl shadow-xl rounded-2xl overflow-hidden">
-          <iframe
-            src={`https://open.spotify.com/embed/album/${albumId}`}
-            width="100%"
-            height="380"
-            frameBorder="0"
-            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-            allowFullScreen
-            title="Spotify Album Player"
-            style={{ borderRadius: 18 }}
-          ></iframe>
-        </div>
-
+        {/* Daftar Lagu */}
         <ol className="space-y-4 w-full max-w-2xl">
-          {album.tracks.items.map((track, idx) => {
-            const isCurrent = currentTrack?.url === track.preview_url && isPlaying;
-
-            return (
-              <li
-                key={track.id}
-                className={`rounded-xl shadow flex items-center gap-4 p-4 transition ${
-                  isCurrent ? "bg-green-100/80" : "bg-white/90 hover:bg-green-50"
-                }`}
-              >
-                <span className="w-7 text-gray-400 font-bold text-lg">{idx + 1}</span>
-                <div className="flex-1">
-                  <div className="font-semibold text-gray-900">{track.name}</div>
-                  <div className="text-sm text-gray-600">
-                    {track.artists.map((a, i) => (
-                      <Link
-                        key={a.id}
-                        to={`/artist/${a.id}`}
-                        className="hover:underline text-green-700"
-                      >
-                        {a.name}{i < track.artists.length - 1 ? ", " : ""}
-                      </Link>
-                    ))}
-                  </div>
+          {album.tracks.items.map((track, idx) => (
+            <li
+              key={track.id}
+              className="bg-white/90 rounded-xl shadow flex items-center gap-4 p-4 hover:bg-green-50 transition"
+            >
+              <span className="w-7 text-gray-400 font-bold text-lg">{idx + 1}</span>
+              <div className="flex-1">
+                <div className="font-semibold text-gray-900">{track.name}</div>
+                <div className="text-sm text-gray-600">
+                  {track.artists.map((a, i) => (
+                    <Link
+                      key={a.id}
+                      to={`/artist/${a.id}`}
+                      className="hover:underline text-green-700"
+                    >
+                      {a.name}
+                      {i < track.artists.length - 1 ? ", " : ""}
+                    </Link>
+                  ))}
                 </div>
-                {track.preview_url ? (
-                  <button
-                    onClick={() =>
-                      playTrack({
-                        url: track.preview_url,
-                        title: track.name,
-                        artist: track.artists.map((a) => a.name).join(", "),
-                        image: album.images?.[0]?.url,
-                      })
-                    }
-                    className="px-3 py-1 rounded-full text-white font-semibold bg-green-500 hover:bg-green-700 transition"
-                  >
-                    {isCurrent ? "Pause" : "Play"}
-                  </button>
-                ) : (
-                  <span className="text-gray-400 italic text-sm">Preview tidak tersedia</span>
-                )}
-              </li>
-            );
-          })}
+              </div>
+              {track.preview_url ? (
+                <button
+                  onClick={() =>
+                    playTrack({
+                      url: track.preview_url,
+                      title: track.name,
+                      artist: track.artists.map((a) => a.name).join(", "),
+                      image: album.images?.[0]?.url,
+                    })
+                  }
+                  className={`px-3 py-1 rounded-full text-white font-semibold ${
+                    currentTrack?.url === track.preview_url && isPlaying
+                      ? "bg-red-500"
+                      : "bg-green-500"
+                  } hover:bg-green-700 transition`}
+                >
+                  {currentTrack?.url === track.preview_url && isPlaying ? "Pause" : "Play"}
+                </button>
+              ) : (
+                <span className="text-gray-400 italic text-sm">Preview tidak tersedia</span>
+              )}
+            </li>
+          ))}
         </ol>
       </div>
 
       <style>{`
+        .animate-fadein { animation: fadein 1.2s cubic-bezier(.57,1.27,.44,.98); }
+        @keyframes fadein { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: none; } }
+        .animate-pop { animation: pop .6s cubic-bezier(.25,1.7,.5,1.2); }
+        @keyframes pop { 0% { transform: scale(0.9); } 60% { transform: scale(1.05); } 100% { transform: scale(1); } }
         .animate-bounce-slow { animation: bounce 2.4s infinite; }
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-18px); } }
-        .animate-pulse { animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
       `}</style>
     </div>
   );
