@@ -4,6 +4,31 @@ import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import InstallPWAButton from "../components/pwabutton";
 
+// Axios instance with token expired handler
+const axiosWithAuth = (token, onTokenExpired) => {
+  const instance = axios.create();
+  instance.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      if (
+        error.response &&
+        (error.response.status === 401 || error.response.status === 403)
+      ) {
+        // Token expired or unauthorized
+        if (onTokenExpired) onTokenExpired();
+      }
+      return Promise.reject(error);
+    }
+  );
+  instance.interceptors.request.use(
+    config => {
+      if (token) config.headers.Authorization = `Bearer ${token}`;
+      return config;
+    }
+  );
+  return instance;
+};
+
 function Home() {
   const [token, setToken] = useState(localStorage.getItem("spotify_token") || "");
   const [searchTerm, setSearchTerm] = useState("");
@@ -17,6 +42,22 @@ function Home() {
   const [user, setUser] = useState(null);
 
   const navigate = useNavigate();
+
+  // Handler for token expired: remove token and redirect to login
+  const handleTokenExpired = () => {
+    localStorage.removeItem("spotify_token");
+    setToken("");
+    setUser(null);
+    setSearchResults([]);
+    setAlbums([]);
+    setTrendingAlbums([]);
+    setTopArtists([]);
+    setTopArtistsData([]);
+    setError("Sesi login kamu sudah berakhir. Silakan login ulang.");
+    setTimeout(() => {
+      window.location.href = "/";
+    }, 1200); // sedikit delay agar pesan error sempat tampil
+  };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -34,10 +75,9 @@ function Home() {
 
   useEffect(() => {
     if (!token) return;
-    axios
-      .get("https://api.spotify.com/v1/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+    const api = axiosWithAuth(token, handleTokenExpired);
+    api
+      .get("https://api.spotify.com/v1/me")
       .then((res) => setUser(res.data))
       .catch(() => setUser(null));
   }, [token]);
@@ -45,11 +85,11 @@ function Home() {
   // --- Ambil Top Track, lalu artist unique dari top track, lalu album dari top track ---
   useEffect(() => {
     if (!token) return;
+    const api = axiosWithAuth(token, handleTokenExpired);
     const fetchAlbumsAndArtistsFromTopTracks = async () => {
       try {
-        const res = await axios.get(
-          "https://api.spotify.com/v1/me/top/tracks?limit=30",
-          { headers: { Authorization: `Bearer ${token}` } }
+        const res = await api.get(
+          "https://api.spotify.com/v1/me/top/tracks?limit=30"
         );
         if (!res.data.items || res.data.items.length === 0) {
           setInfo("Top tracks tidak ditemukan, menampilkan album random.");
@@ -73,9 +113,8 @@ function Home() {
           let results = [];
           for (let i = 0; i < uniqueArtists.length; i += batchSize) {
             const ids = uniqueArtists.slice(i, i + batchSize).map(a => a.id).join(",");
-            const artistRes = await axios.get(
-              `https://api.spotify.com/v1/artists?ids=${ids}`,
-              { headers: { Authorization: `Bearer ${token}` } }
+            const artistRes = await api.get(
+              `https://api.spotify.com/v1/artists?ids=${ids}`
             );
             results = results.concat(artistRes.data.artists);
           }
@@ -99,14 +138,13 @@ function Home() {
     };
     const fetchRandomAlbums = async () => {
       try {
-        const res = await axios.get(
-          "https://api.spotify.com/v1/browse/new-releases?limit=12",
-          { headers: { Authorization: `Bearer ${token}` } }
+        const res = await api.get(
+          "https://api.spotify.com/v1/browse/new-releases?limit=12"
         );
         setAlbums(res.data.albums.items);
       } catch (err) {
         if (err.response?.status === 403) {
-          setError("Akses ditolak. Silakan logout lalu login ulang dan izinkan akses ke Spotify Top Tracks.");
+          setError("Akses ditolak. Silakan login ulang dan izinkan akses ke Spotify Top Tracks.");
         } else {
           setError(
             "Gagal mengambil album dari track kamu. " +
@@ -116,18 +154,19 @@ function Home() {
       }
     };
     fetchAlbumsAndArtistsFromTopTracks();
+    // eslint-disable-next-line
   }, [token]);
 
   useEffect(() => {
     if (!token) return;
-    axios
-      .get("https://api.spotify.com/v1/browse/new-releases?limit=10", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+    const api = axiosWithAuth(token, handleTokenExpired);
+    api
+      .get("https://api.spotify.com/v1/browse/new-releases?limit=10")
       .then((res) => {
         setTrendingAlbums(res.data.albums.items || []);
       })
       .catch(() => setTrendingAlbums([]));
+    // eslint-disable-next-line
   }, [token]);
 
   useEffect(() => {
@@ -135,11 +174,11 @@ function Home() {
       setSearchResults([]);
       return;
     }
+    const api = axiosWithAuth(token, handleTokenExpired);
     const timeout = setTimeout(async () => {
       try {
-        const res = await axios.get(
-          `https://api.spotify.com/v1/search?q=${encodeURIComponent(searchTerm)}&type=album,artist,track&limit=10`,
-          { headers: { Authorization: `Bearer ${token}` } }
+        const res = await api.get(
+          `https://api.spotify.com/v1/search?q=${encodeURIComponent(searchTerm)}&type=album,artist,track&limit=10`
         );
         const albums = res.data.albums ? res.data.albums.items : [];
         const artists = res.data.artists ? res.data.artists.items : [];
@@ -150,10 +189,11 @@ function Home() {
           ...tracks.map(a => ({ ...a, _type: "track" })),
         ]);
       } catch (err) {
-        console.error("Search error:", err);
+        // error sudah ditangani oleh interceptor
       }
     }, 500);
     return () => clearTimeout(timeout);
+    // eslint-disable-next-line
   }, [searchTerm, token]);
 
   const handleLogin = async () => {
@@ -176,7 +216,7 @@ function Home() {
   return (
     <div className="min-h-screen w-full bg-black">
       {/* Dekorasi background */}
-            <div className="fixed inset-0 z-0 pointer-events-none select-none">
+      <div className="fixed inset-0 z-0 pointer-events-none select-none">
         <div className="absolute inset-0 bg-gradient-to-br from-green-900 via-black to-[#1db954] opacity-95"></div>
         <svg className="absolute -top-40 -left-40 w-[600px] h-[600px] opacity-20" viewBox="0 0 800 800">
           <circle cx="400" cy="400" r="400" fill="#1db954" />
@@ -229,6 +269,9 @@ function Home() {
             <div className="mt-12 text-center text-gray-200/60 text-lg tracking-wide drop-shadow">
               Powered by Spotify • Explore • Enjoy • Experience
             </div>
+            {error && (
+              <div className="mt-6 text-red-400 font-bold">{error}</div>
+            )}
           </div>
         ) : (
           <>
