@@ -29,7 +29,7 @@ function Album() {
   const token = localStorage.getItem("spotify_token");
   const [album, setAlbum] = useState(null);
   const [error, setError] = useState("");
-  const [volume, setVolume] = useState(0.5);
+  const [volume, setVolume] = useState(0.6);
 
   useEffect(() => {
     if (!token) return;
