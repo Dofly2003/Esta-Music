@@ -27,11 +27,22 @@ export default function InstallPWAButton() {
   return (
     <button
       onClick={handleInstall}
-      className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl shadow font-bold ml-2 transition"
+      className="ml-2 px-2 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl shadow font-bold flex items-center transition"
       title="Install App"
     >
-      <svg xmlns="http://www.w3.org/2000/svg" className="inline mr-1" width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5"/><path d="M5 12l7 7 7-7"/></svg>
-      Install App
+      {/* Mobile: Only icon */}
+      <span className="block sm:hidden">
+        <svg xmlns="http://www.w3.org/2000/svg" width={26} height={26} fill="none" viewBox="0 0 24 24">
+          <path d="M12 19V5M5 12l7 7 7-7" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </span>
+      {/* Desktop: Icon + text */}
+      <span className="hidden sm:flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" className="mr-1" width={20} height={20} fill="none" viewBox="0 0 24 24">
+          <path d="M12 19V5M5 12l7 7 7-7" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+        Install App
+      </span>
     </button>
   );
 }
