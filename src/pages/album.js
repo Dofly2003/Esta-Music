@@ -92,53 +92,6 @@ function Album() {
           ></iframe>
         </div>
 
-        <ol className="space-y-4 w-full max-w-2xl">
-          {album.tracks.items.map((track, idx) => {
-            const isCurrent = currentTrack?.url === track.preview_url && isPlaying;
-
-            return (
-              <li
-                key={track.id}
-                className={`rounded-xl shadow flex items-center gap-4 p-4 transition ${
-                  isCurrent ? "bg-green-100/80" : "bg-white/90 hover:bg-green-50"
-                }`}
-              >
-                <span className="w-7 text-gray-400 font-bold text-lg">{idx + 1}</span>
-                <div className="flex-1">
-                  <div className="font-semibold text-gray-900">{track.name}</div>
-                  <div className="text-sm text-gray-600">
-                    {track.artists.map((a, i) => (
-                      <Link
-                        key={a.id}
-                        to={`/artist/${a.id}`}
-                        className="hover:underline text-green-700"
-                      >
-                        {a.name}{i < track.artists.length - 1 ? ", " : ""}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-                {track.preview_url ? (
-                  <button
-                    onClick={() =>
-                      playTrack({
-                        url: track.preview_url,
-                        title: track.name,
-                        artist: track.artists.map((a) => a.name).join(", "),
-                        image: album.images?.[0]?.url,
-                      })
-                    }
-                    className="px-3 py-1 rounded-full text-white font-semibold bg-green-500 hover:bg-green-700 transition"
-                  >
-                    {isCurrent ? "Pause" : "Play"}
-                  </button>
-                ) : (
-                  <span className="text-gray-400 italic text-sm">Preview tidak tersedia</span>
-                )}
-              </li>
-            );
-          })}
-        </ol>
       </div>
 
       <style>{`
