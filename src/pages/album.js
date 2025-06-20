@@ -7,7 +7,7 @@ function Album() {
   const token = localStorage.getItem("spotify_token");
   const [album, setAlbum] = useState(null);
   const [error, setError] = useState("");
-  const [volume, setVolume] = useState(0.5); // Volume state ditambahkan
+  const [volume, setVolume] = useState(0.5);
 
   useEffect(() => {
     if (!token) return;
@@ -27,7 +27,7 @@ function Album() {
 
   return (
     <div className="fixed inset-0 w-full h-full bg-black font-sans">
-      {/* Dekorasi Background */}
+      {/* Background */}
       <div className="fixed inset-0 z-0 pointer-events-none select-none">
         <div className="absolute inset-0 bg-gradient-to-br from-green-900 via-black to-[#1db954] opacity-95"></div>
         <svg className="absolute -top-40 -left-40 w-[600px] h-[600px] opacity-15" viewBox="0 0 800 800">
@@ -49,7 +49,7 @@ function Album() {
           ← Kembali
         </Link>
 
-        {/* 🎚️ Kontrol Volume */}
+        {/* 🎚️ Volume Control */}
         <div className="mb-6 flex items-center gap-4">
           <label className="text-white">Volume 🎚️</label>
           <input
@@ -73,7 +73,16 @@ function Album() {
           <div>
             <h1 className="text-4xl font-extrabold text-gray-900 drop-shadow mb-2">{album.name}</h1>
             <div className="text-gray-700 mb-3 text-lg">
-              by <span className="font-semibold">{album.artists.map(a => a.name).join(", ")}</span>
+              by{" "}
+              {album.artists.map((a, i) => (
+                <Link
+                  key={a.id}
+                  to={`/artist/${a.id}`}
+                  className="font-semibold text-green-600 hover:underline"
+                >
+                  {a.name}{i < album.artists.length - 1 ? ", " : ""}
+                </Link>
+              ))}
             </div>
             <div className="text-gray-500 text-base">{album.total_tracks} tracks</div>
             <div className="mt-2 flex gap-2 flex-wrap">
@@ -92,7 +101,6 @@ function Album() {
           </div>
         </div>
 
-        {/* Spotify Album Embed */}
         <div className="mb-10 w-full max-w-2xl shadow-xl rounded-2xl overflow-hidden">
           <iframe
             src={`https://open.spotify.com/embed/album/${albumId}`}
@@ -112,9 +120,18 @@ function Album() {
               <span className="w-7 text-gray-400 font-bold text-lg">{idx + 1}</span>
               <div className="flex-1">
                 <div className="font-semibold text-gray-900">{track.name}</div>
-                <div className="text-sm text-gray-600">{track.artists.map(a => a.name).join(", ")}</div>
+                <div className="text-sm text-gray-600">
+                  {track.artists.map((a, i) => (
+                    <Link
+                      key={a.id}
+                      to={`/artist/${a.id}`}
+                      className="hover:underline text-green-700"
+                    >
+                      {a.name}{i < track.artists.length - 1 ? ", " : ""}
+                    </Link>
+                  ))}
+                </div>
               </div>
-              {/* Audio preview dengan kontrol volume */}
               {track.preview_url && (
                 <audio
                   controls
@@ -132,13 +149,11 @@ function Album() {
         </ol>
       </div>
 
-      {/* CSS Animasi */}
       <style>{`
         .animate-fadein { animation: fadein 1.2s cubic-bezier(.57,1.27,.44,.98); }
         @keyframes fadein { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: none; } }
         .animate-pop { animation: pop .6s cubic-bezier(.25,1.7,.5,1.2); }
-        @keyframes pop { 0% { transform: scale(0.9); } 60% { transform: scale(1.05); } 100% { transform: scale(1); }
-        }
+        @keyframes pop { 0% { transform: scale(0.9); } 60% { transform: scale(1.05); } 100% { transform: scale(1); } }
         .animate-bounce-slow { animation: bounce 2.4s infinite; }
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-18px); } }
       `}</style>
