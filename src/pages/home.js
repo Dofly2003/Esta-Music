@@ -159,11 +159,13 @@ function Home() {
     const authUrl = await createAuthUrl();
     window.location.href = authUrl;
   };
+
   const handleLogout = () => {
     localStorage.removeItem("spotify_token");
     setToken("");
     setSearchResults([]);
   };
+
   const handleSearchClick = (item) => {
     if (item._type === "album") navigate(`/album/${item.id}`);
     else if (item._type === "artist") navigate(`/artist/${item.id}`);
@@ -243,17 +245,17 @@ function Home() {
                       <img
                         src={user.images[0].url}
                         alt={user.display_name}
-                        className="w-9 h-9 rounded-full object-cover border-2 border-green-300"
+                        className="w-9 h-9 sm:w-11 sm:h-11 rounded-full object-cover border-2 border-green-300"
+                        style={{ objectFit: "cover" }}
                       />
                     ) : (
-                      <div className="w-9 h-9 flex items-center justify-center rounded-full bg-green-600 text-white font-bold border-2 border-green-300">
+                      <div className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center rounded-full bg-green-600 text-white font-bold border-2 border-green-300">
                         {user.display_name?.charAt(0).toUpperCase() || "?"}
                       </div>
                     )}
-                    <span className="font-medium text-gray-800">{user.display_name}</span>
+                    <span className="font-medium text-gray-800 text-xs sm:text-base">{user.display_name}</span>
                   </div>
                 )}
-
                 <button onClick={handleLogout} className="text-red-500 underline font-semibold text-lg">Logout</button>
               </div>
             </div>
@@ -343,9 +345,9 @@ function Home() {
                         <img
                           src={artist.images?.[0]?.url || "/default-avatar.png"}
                           alt={artist.name}
-                          className="w-24 h-24 sm:w-28 sm:h-28 object-cover rounded-full shadow-lg mb-2 border-2 border-green-200 group-hover:border-green-500 transition"
+                          className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-full shadow-lg mb-2 border-2 border-green-200 group-hover:border-green-500 transition"
                         />
-                        <div className="font-bold text-center text-gray-900 text-base truncate w-full">{artist.name}</div>
+                        <div className="font-bold text-center text-gray-900 text-xs sm:text-base truncate w-full">{artist.name}</div>
                         <div className="text-xs text-gray-600 text-center mt-1">
                           {artist.followers?.total ? (
                             <span>
@@ -364,14 +366,14 @@ function Home() {
                 </div>
               )}
 
-              {/* === ALBUMS FROM TOP TRACKS === */}
+              {/* === ALBUMS FROM TOP TRACKS, grid 2 di mobile === */}
               {albums.length > 0 && (
                 <div className="mb-10 w-full max-w-6xl">
                   <h2 className="text-2xl font-semibold mb-4 text-white drop-shadow">
                     {info ? "⭐ Album Random" : "⭐ Album from Your Top Tracks"}
                   </h2>
                   {info && <div className="mb-2 text-yellow-300 font-semibold">{info}</div>}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-7">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-7">
                     {albums.map((album) => (
                       <Link
                         key={album.id}
@@ -381,9 +383,9 @@ function Home() {
                         <img
                           src={album.images[0]?.url}
                           alt={album.name}
-                          className="w-36 h-36 object-cover rounded-xl mb-2 shadow"
+                          className="w-28 h-28 sm:w-36 sm:h-36 object-cover rounded-xl mb-2 shadow"
                         />
-                        <div className="font-bold text-center text-gray-900">{album.name}</div>
+                        <div className="font-bold text-center text-gray-900 text-xs sm:text-base">{album.name}</div>
                         <div className="text-sm text-gray-500 text-center">
                           {album.artists?.map(a => a.name).join(", ")}
                         </div>
