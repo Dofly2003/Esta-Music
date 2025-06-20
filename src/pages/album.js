@@ -56,6 +56,72 @@ function AlbumWithIframeAndPreview() {
           className="rounded-xl shadow-xl"
         ></iframe>
       </div>
+
+      {/* AUDIO Preview List */}
+      {error && <div className="text-red-500">{error}</div>}
+      <ul className="space-y-3">
+        {album.tracks.items.map((track, i) => (
+          <li
+            key={track.id}
+            className="bg-white/10 backdrop-blur-md rounded-lg px-4 py-3 flex justify-between items-center hover:bg-white/20 transition"
+          >
+            <div className="flex flex-col">
+              {/* Ini adalah LINK ke halaman Spotify track atau halaman local detail */}
+              <a
+                href={`ttps://open.spotify.com/embed/album/${albumId}}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-green-300 hover:underline"
+              >
+                {i + 1}. {track.name}
+              </a>
+
+              <span className="text-sm text-gray-300">
+                {track.artists.map((a) => a.name).join(", ")}
+              </span>
+            </div>
+
+            {/* Tombol preview/play jika tersedia */}
+            {track.preview_url ? (
+              <button
+                onClick={() => handlePlay(track)}
+                className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-full"
+              >
+                {currentPreview?.id === track.id ? "Pause" : "Play"}
+              </button>
+            ) : (
+              <span className="text-gray-400 italic text-sm">No preview</span>
+            )}
+          </li>
+        ))}
+      </ul>
+
+
+      {/* Floating Audio Player */}
+      {currentPreview && (
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white/90 text-black px-6 py-3 rounded-full shadow-lg flex items-center gap-4">
+          <img
+            src={album.images?.[0]?.url}
+            alt="cover"
+            className="w-12 h-12 object-cover rounded-lg"
+          />
+          <div>
+            <div className="font-bold">{currentPreview.name}</div>
+            <div className="text-sm text-gray-600">
+              {currentPreview.artists.map((a) => a.name).join(", ")}
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              audioRef.current.pause();
+              setCurrentPreview(null);
+            }}
+            className="ml-auto bg-red-500 hover:bg-red-700 text-white px-3 py-1 rounded-full"
+          >
+            ✕
+          </button>
+        </div>
+      )}
     </div>
   );
 }
