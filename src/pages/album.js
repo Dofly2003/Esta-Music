@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 
@@ -9,6 +9,14 @@ function Album() {
   const [error, setError] = useState("");
   const [volume, setVolume] = useState(0.5);
 
+  const audioRefs = useRef({}); // gunakan objek untuk menyimpan semua ref audio
+
+  useEffect(() => {
+    // setiap kali volume berubah, perbarui semua audio element
+    Object.values(audioRefs.current).forEach((audio) => {
+      if (audio) audio.volume = volume;
+    });
+  }, [volume]);
   useEffect(() => {
     if (!token) return;
 
@@ -24,6 +32,8 @@ function Album() {
 
   if (error) return <div className="p-8 text-red-500">{error}</div>;
   if (!album) return <div className="p-8 text-white">Memuat...</div>;
+
+
 
   return (
     <div className="fixed inset-0 w-full h-full bg-black font-sans">
@@ -138,7 +148,7 @@ function Album() {
                   src={track.preview_url}
                   className="h-8"
                   ref={(el) => {
-                    if (el) el.volume = volume;
+                    if (el) audioRefs.current[track.id] = el;
                   }}
                 >
                   Your browser does not support the audio element.
