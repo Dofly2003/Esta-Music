@@ -64,51 +64,8 @@ function Artist() {
                     className="rounded-xl shadow-lg"
                     title="Spotify Artist Player"
                 ></iframe>
-                <p className="text-sm text-gray-400 text-center mt-2">
-                    Untuk mengatur volume, gunakan slider volume di pengaturan suara perangkat atau popup player di bawah.
-                </p>
             </div>
 
-            {/* Track List */}
-            <div className="max-w-3xl mx-auto">
-                {tracks.map((track, index) => (
-                    <div
-                        key={track.id}
-                        className="bg-white/10 backdrop-blur-md rounded-lg p-4 mb-4 flex items-center justify-between hover:bg-white/20 transition"
-                    >
-                        <div className="flex-1">
-                            <div className="font-bold text-lg">{index + 1}. {track.name}</div>
-                            <div className="text-sm text-gray-300">{track.artists.map(a => a.name).join(", ")}</div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                            {/* Tombol Play yang trigger global player */}
-                            {track.preview_url ? (
-                                <button
-                                    onClick={() =>
-                                        playTrack({
-                                            url: track.preview_url,
-                                            title: track.name,
-                                            artist: track.artists.map(a => a.name).join(", "),
-                                            image: (track.album?.images?.[0]?.url || artist.images[0]?.url),
-                                        })
-                                    }
-                                    className={`px-3 py-1 rounded-full text-white font-semibold bg-green-500 hover:bg-green-700 transition`}
-                                >
-                                    {(currentTrack && currentTrack.url === track.preview_url && isPlaying)
-                                        ? "Pause"
-                                        : "Play"}
-                                </button>
-                            ) : (
-                                <span className="text-gray-400 italic text-sm">Preview tidak tersedia</span>
-                            )}
-                            <div className="text-sm text-gray-300">
-                                {Math.floor(track.duration_ms / 60000)}:
-                                {String(Math.floor((track.duration_ms % 60000) / 1000)).padStart(2, '0')}
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
         </div>
     );
 }
