@@ -2,6 +2,28 @@ import React, { useEffect, useState, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 
+// Komponen audio player dengan kontrol volume
+function AudioPlayer({ src, volume }) {
+  const audioRef = useRef(null);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
+    }
+  }, [volume]);
+
+  return (
+    <audio
+      controls
+      src={src}
+      className="h-8"
+      ref={audioRef}
+    >
+      Your browser does not support the audio element.
+    </audio>
+  );
+}
+
 function Album() {
   const { albumId } = useParams();
   const token = localStorage.getItem("spotify_token");
@@ -9,14 +31,6 @@ function Album() {
   const [error, setError] = useState("");
   const [volume, setVolume] = useState(0.5);
 
-  const audioRefs = useRef({}); // gunakan objek untuk menyimpan semua ref audio
-
-  useEffect(() => {
-    // setiap kali volume berubah, perbarui semua audio element
-    Object.values(audioRefs.current).forEach((audio) => {
-      if (audio) audio.volume = volume;
-    });
-  }, [volume]);
   useEffect(() => {
     if (!token) return;
 
@@ -33,11 +47,9 @@ function Album() {
   if (error) return <div className="p-8 text-red-500">{error}</div>;
   if (!album) return <div className="p-8 text-white">Memuat...</div>;
 
-
-
   return (
     <div className="fixed inset-0 w-full h-full bg-black font-sans">
-      {/* Background */}
+      {/* Background Dekorasi */}
       <div className="fixed inset-0 z-0 pointer-events-none select-none">
         <div className="absolute inset-0 bg-gradient-to-br from-green-900 via-black to-[#1db954] opacity-95"></div>
         <svg className="absolute -top-40 -left-40 w-[600px] h-[600px] opacity-15" viewBox="0 0 800 800">
@@ -74,6 +86,7 @@ function Album() {
           <span className="text-white">{Math.round(volume * 100)}%</span>
         </div>
 
+        {/* Info Album */}
         <div className="flex items-center gap-8 mb-10 bg-white/80 rounded-2xl shadow-xl p-6 backdrop-blur-lg">
           <img
             src={album.images?.[0]?.url}
@@ -111,6 +124,7 @@ function Album() {
           </div>
         </div>
 
+        {/* Embed Spotify Player */}
         <div className="mb-10 w-full max-w-2xl shadow-xl rounded-2xl overflow-hidden">
           <iframe
             src={`https://open.spotify.com/embed/album/${albumId}`}
@@ -124,6 +138,7 @@ function Album() {
           ></iframe>
         </div>
 
+        {/* Track List */}
         <ol className="space-y-4 w-full max-w-2xl">
           {album.tracks.items.map((track, idx) => (
             <li key={track.id} className="bg-white/90 rounded-xl shadow flex items-center gap-4 p-4 hover:bg-green-50 transition">
@@ -143,16 +158,7 @@ function Album() {
                 </div>
               </div>
               {track.preview_url && (
-                <audio
-                  controls
-                  src={track.preview_url}
-                  className="h-8"
-                  ref={(el) => {
-                    if (el) audioRefs.current[track.id] = el;
-                  }}
-                >
-                  Your browser does not support the audio element.
-                </audio>
+                <AudioPlayer src={track.preview_url} volume={volume} />
               )}
             </li>
           ))}
