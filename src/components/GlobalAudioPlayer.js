@@ -4,16 +4,35 @@ import { useMusicPlayer } from "../context/MusicPlayerContext";
 export default function GlobalAudioPlayer() {
   const { currentTrack, isPlaying, togglePlay, audioRef, setIsPlaying } = useMusicPlayer();
 
-  if (!currentTrack) return null; // Belum ada lagu
+  if (!currentTrack) return null;
 
   return (
-    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 bg-white/90 rounded-xl shadow-xl px-6 py-3 flex items-center gap-4 w-[350px]">
-      <img src={currentTrack.image} alt={currentTrack.title} className="w-12 h-12 rounded-lg" />
-      <div className="flex-1">
-        <div className="font-bold">{currentTrack.title}</div>
-        <div className="text-sm text-gray-600">{currentTrack.artist}</div>
+    <div style={{
+      position: "fixed",
+      bottom: 16,
+      left: "50%",
+      transform: "translateX(-50%)",
+      zIndex: 1000,
+      background: "rgba(255,255,255,0.95)",
+      borderRadius: 12,
+      boxShadow: "0 2px 16px rgba(0,0,0,0.15)",
+      padding: 16,
+      display: "flex",
+      alignItems: "center",
+      gap: 12,
+      minWidth: 280,
+      maxWidth: 400
+    }}>
+      <img
+        src={currentTrack.image}
+        alt={currentTrack.title}
+        style={{ width: 48, height: 48, borderRadius: 8, objectFit: "cover" }}
+      />
+      <div style={{ flex: 1 }}>
+        <div style={{ fontWeight: "bold" }}>{currentTrack.title}</div>
+        <div style={{ fontSize: 12, color: "#444" }}>{currentTrack.artist}</div>
       </div>
-      <button onClick={togglePlay} className="text-2xl">
+      <button onClick={togglePlay} style={{ fontSize: 24, border: "none", background: "none" }}>
         {isPlaying ? "⏸️" : "▶️"}
       </button>
       <audio

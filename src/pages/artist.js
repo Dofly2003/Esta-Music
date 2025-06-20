@@ -1,14 +1,14 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
+import { useMusicPlayer } from "../context/MusicPlayerContext"; // <--- Tambahkan ini
 
 function Artist() {
     const { artistId } = useParams();
     const token = localStorage.getItem("spotify_token");
     const [artist, setArtist] = useState(null);
     const [tracks, setTracks] = useState([]);
-    const [volume, setVolume] = useState(0.5);
-    const audioRefs = useRef({});
+    const { playTrack, currentTrack, isPlaying } = useMusicPlayer(); // <-- Tambahkan ini
 
     useEffect(() => {
         if (!token) return;
@@ -21,12 +21,6 @@ function Artist() {
             headers: { Authorization: `Bearer ${token}` }
         }).then(res => setTracks(res.data.tracks));
     }, [artistId, token]);
-
-    useEffect(() => {
-        Object.values(audioRefs.current).forEach((audio) => {
-            if (audio) audio.volume = volume;
-        });
-    }, [volume]);
 
     if (!artist) return <div className="text-white p-8">Memuat artist...</div>;
 
@@ -58,21 +52,6 @@ function Artist() {
                 <p className="text-gray-300">{artist.followers.total.toLocaleString()} followers</p>
             </div>
 
-            {/* Kontrol Volume
-            <div className="flex items-center justify-center gap-4 mb-6">
-                <label className="text-white">Volume 🎚️</label>
-                <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    value={volume}
-                    onChange={(e) => setVolume(parseFloat(e.target.value))}
-                    className="w-40"
-                />
-                <span>{Math.round(volume * 100)}%</span>
-            </div> */}
-
             {/* Embed Spotify */}
             <div className="w-full max-w-2xl mx-auto mb-10">
                 <iframe
@@ -85,9 +64,8 @@ function Artist() {
                     className="rounded-xl shadow-lg"
                     title="Spotify Artist Player"
                 ></iframe>
-                {/* Edukasi user tentang volume */}
                 <p className="text-sm text-gray-400 text-center mt-2">
-                    Untuk mengatur volume, gunakan slider volume (ikon speaker) di pojok kiri bawah pemutar Spotify di atas.
+                    Untuk mengatur volume, gunakan slider volume di pengaturan suara perangkat atau popup player di bawah.
                 </p>
             </div>
 
@@ -103,13 +81,25 @@ function Artist() {
                             <div className="text-sm text-gray-300">{track.artists.map(a => a.name).join(", ")}</div>
                         </div>
                         <div className="flex items-center gap-4">
-                            {track.preview_url && (
-                                <audio
-                                    controls
-                                    ref={(el) => (audioRefs.current[track.id] = el)}
-                                    src={track.preview_url}
-                                    className="h-8"
-                                />
+                            {/* Tombol Play yang trigger global player */}
+                            {track.preview_url ? (
+                                <button
+                                    onClick={() =>
+                                        playTrack({
+                                            url: track.preview_url,
+                                            title: track.name,
+                                            artist: track.artists.map(a => a.name).join(", "),
+                                            image: (track.album?.images?.[0]?.url || artist.images[0]?.url),
+                                        })
+                                    }
+                                    className={`px-3 py-1 rounded-full text-white font-semibold bg-green-500 hover:bg-green-700 transition`}
+                                >
+                                    {(currentTrack && currentTrack.url === track.preview_url && isPlaying)
+                                        ? "Pause"
+                                        : "Play"}
+                                </button>
+                            ) : (
+                                <span className="text-gray-400 italic text-sm">Preview tidak tersedia</span>
                             )}
                             <div className="text-sm text-gray-300">
                                 {Math.floor(track.duration_ms / 60000)}:

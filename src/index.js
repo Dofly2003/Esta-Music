@@ -7,11 +7,8 @@ import Player from "./pages/player";
 import Playlist from "./pages/playlist";
 import Album from "./pages/album";
 import Artist from "./pages/artist";
-
-// Tambahkan import berikut:
 import { MusicPlayerProvider } from "./context/MusicPlayerContext";
 import GlobalAudioPlayer from "./components/GlobalAudioPlayer";
-
 import "./index.css";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
@@ -19,7 +16,6 @@ root.render(
   <React.StrictMode>
     <BrowserRouter>
       <MusicPlayerProvider>
-        {/* Player global selalu tampil */}
         <GlobalAudioPlayer />
         <Routes>
           <Route path="/" element={<Home />} />
