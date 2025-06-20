@@ -58,7 +58,7 @@ function Artist() {
                 <p className="text-gray-300">{artist.followers.total.toLocaleString()} followers</p>
             </div>
 
-            {/* Kontrol Volume */}
+            {/* Kontrol Volume
             <div className="flex items-center justify-center gap-4 mb-6">
                 <label className="text-white">Volume 🎚️</label>
                 <input
@@ -71,7 +71,7 @@ function Artist() {
                     className="w-40"
                 />
                 <span>{Math.round(volume * 100)}%</span>
-            </div>
+            </div> */}
 
             {/* Embed Spotify */}
             <div className="w-full max-w-2xl mx-auto mb-10">

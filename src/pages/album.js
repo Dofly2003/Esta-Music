@@ -72,7 +72,7 @@ function Album() {
         </Link>
 
         {/* 🎚️ Volume Control */}
-        <div className="mb-6 flex items-center gap-4">
+        {/* <div className="mb-6 flex items-center gap-4">
           <label className="text-white">Volume 🎚️</label>
           <input
             type="range"
@@ -84,7 +84,7 @@ function Album() {
             className="w-40"
           />
           <span className="text-white">{Math.round(volume * 100)}%</span>
-        </div>
+        </div> */}
 
         {/* Info Album */}
         <div className="flex items-center gap-8 mb-10 bg-white/80 rounded-2xl shadow-xl p-6 backdrop-blur-lg">
