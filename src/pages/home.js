@@ -9,14 +9,14 @@ function Home() {
   const [searchResults, setSearchResults] = useState([]);
   const [albums, setAlbums] = useState([]);
   const [trendingAlbums, setTrendingAlbums] = useState([]);
-  const [topArtists, setTopArtists] = useState([]); // TAMBAH: State untuk top artist dari top track
+  const [topArtists, setTopArtists] = useState([]);
+  const [topArtistsData, setTopArtistsData] = useState([]); // Profil lengkap artist
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
   const [user, setUser] = useState(null);
 
   const navigate = useNavigate();
 
-  // === LOGIC TETAP ===
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
@@ -47,13 +47,14 @@ function Home() {
     const fetchAlbumsAndArtistsFromTopTracks = async () => {
       try {
         const res = await axios.get(
-          "https://api.spotify.com/v1/me/top/tracks?limit=20",
+          "https://api.spotify.com/v1/me/top/tracks?limit=30",
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (!res.data.items || res.data.items.length === 0) {
           setInfo("Top tracks tidak ditemukan, menampilkan album random.");
           fetchRandomAlbums();
           setTopArtists([]);
+          setTopArtistsData([]);
           return;
         }
         // Ambil semua artist dari top track
@@ -63,6 +64,23 @@ function Home() {
           new Map(allArtists.map((a) => [a.id, a])).values()
         );
         setTopArtists(uniqueArtists);
+
+        // Ambil profil artist (followers, images, dsb) - batch by 50 max
+        const fetchFullArtistData = async () => {
+          if (uniqueArtists.length === 0) return;
+          const batchSize = 50;
+          let results = [];
+          for (let i = 0; i < uniqueArtists.length; i += batchSize) {
+            const ids = uniqueArtists.slice(i, i + batchSize).map(a => a.id).join(",");
+            const artistRes = await axios.get(
+              `https://api.spotify.com/v1/artists?ids=${ids}`,
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            results = results.concat(artistRes.data.artists);
+          }
+          setTopArtistsData(results);
+        };
+        fetchFullArtistData();
 
         // Ambil album dari top track (seperti sebelumnya)
         const trackAlbums = res.data.items.map((track) => track.album);
@@ -75,6 +93,7 @@ function Home() {
         setInfo("Top tracks tidak ditemukan, menampilkan album random.");
         fetchRandomAlbums();
         setTopArtists([]);
+        setTopArtistsData([]);
       }
     };
     const fetchRandomAlbums = async () => {
@@ -151,10 +170,9 @@ function Home() {
     else if (item._type === "track" && item.album?.id) navigate(`/album/${item.album.id}`);
   };
 
-  // === INTERIOR DEKORASI STARTS HERE ===
   return (
     <div className="min-h-screen w-full bg-black">
-      {/* Dekorasi background: gradient & abstract circles */}
+      {/* Dekorasi background */}
       <div className="fixed inset-0 z-0 pointer-events-none select-none">
         <div className="absolute inset-0 bg-gradient-to-br from-green-900 via-black to-[#1db954] opacity-95"></div>
         <svg className="absolute -top-40 -left-40 w-[600px] h-[600px] opacity-20" viewBox="0 0 800 800">
@@ -163,12 +181,10 @@ function Home() {
         <svg className="absolute bottom-0 right-0 w-[480px] h-[480px] opacity-10" viewBox="0 0 800 800">
           <circle cx="400" cy="400" r="400" fill="#fff" />
         </svg>
-        {/* "Floating notes" */}
         <span className="absolute left-20 top-10 text-5xl text-white/30 animate-bounce-slow">🎶</span>
         <span className="absolute right-36 bottom-12 text-6xl text-green-400/30 animate-bounce">🎹</span>
         <span className="absolute left-1/2 top-1/3 text-4xl text-white/40 animate-pulse">🎼</span>
       </div>
-      {/* Content */}
       <div className="relative z-10 flex flex-col items-center justify-start pb-12">
         {/* LOGIN PAGE */}
         {!token ? (
@@ -307,26 +323,41 @@ function Home() {
                 </div>
               )}
 
-              {/* === TOP ARTIST SECTION === */}
-              {topArtists.length > 0 && (
+              {/* === TOP ARTIST SECTION RESPONSIVE === */}
+              {topArtistsData.length > 0 && (
                 <div className="mb-10 w-full max-w-6xl">
                   <h2 className="text-2xl font-semibold mb-4 text-white drop-shadow">
                     🎤 Top Artists from Your Top Tracks
                   </h2>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-7">
-                    {topArtists.slice(0, 6).map((artist) => (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+                    {topArtistsData.map((artist) => (
                       <Link
                         key={artist.id}
                         to={`/artist/${artist.id}`}
-                        className="bg-white/90 rounded-2xl shadow-lg flex flex-col items-center p-4 hover:bg-green-50 transition"
+                        className="bg-white/90 rounded-2xl shadow-lg flex flex-col items-center p-4 hover:bg-green-50 transition group"
+                        style={{
+                          minWidth: 0,
+                          wordBreak: "break-word"
+                        }}
                       >
                         <img
                           src={artist.images?.[0]?.url || "/default-avatar.png"}
                           alt={artist.name}
-                          className="w-28 h-28 object-cover rounded-full mb-2 shadow"
+                          className="w-24 h-24 sm:w-28 sm:h-28 object-cover rounded-full shadow-lg mb-2 border-2 border-green-200 group-hover:border-green-500 transition"
                         />
-                        <div className="font-bold text-center text-gray-900">{artist.name}</div>
-                        {/* You can add genre or followers if you want */}
+                        <div className="font-bold text-center text-gray-900 text-base truncate w-full">{artist.name}</div>
+                        <div className="text-xs text-gray-600 text-center mt-1">
+                          {artist.followers?.total ? (
+                            <span>
+                              {artist.followers.total.toLocaleString()} followers
+                            </span>
+                          ) : null}
+                        </div>
+                        {artist.genres && artist.genres.length > 0 && (
+                          <div className="text-xs text-gray-400 text-center mt-1 truncate" style={{maxWidth: '100%'}}>
+                            {artist.genres.slice(0,2).join(", ")}
+                          </div>
+                        )}
                       </Link>
                     ))}
                   </div>
@@ -341,7 +372,7 @@ function Home() {
                   </h2>
                   {info && <div className="mb-2 text-yellow-300 font-semibold">{info}</div>}
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-7">
-                    {albums.slice(0, 5).map((album) => (
+                    {albums.map((album) => (
                       <Link
                         key={album.id}
                         to={`/album/${album.id}`}
