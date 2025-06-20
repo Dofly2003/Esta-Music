@@ -139,7 +139,7 @@ function Album() {
         </div>
 
         {/* Track List */}
-        <ol className="space-y-4 w-full max-w-2xl">
+        {/* <ol className="space-y-4 w-full max-w-2xl">
           {album.tracks.items.map((track, idx) => (
             <li key={track.id} className="bg-white/90 rounded-xl shadow flex items-center gap-4 p-4 hover:bg-green-50 transition">
               <span className="w-7 text-gray-400 font-bold text-lg">{idx + 1}</span>
@@ -162,7 +162,7 @@ function Album() {
               )}
             </li>
           ))}
-        </ol>
+        </ol> */}
       </div>
 
       <style>{`
