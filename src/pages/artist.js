@@ -38,8 +38,8 @@ function Artist() {
   if (!artist) return <div className="text-white p-8">Memuat artist...</div>;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-900 via-black to-red-700 text-white px-4 py-10 font-sans">
-      <Link to="/" className="text-green-300 hover:text-green-100 underline mb-6 inline-block">
+    <div className="relative z-10 min-h-screen flex flex-col items-center justify-start px-4 py-10">
+      <Link to="/" className="text-green-300 hover:text-green-100 underline mb-4 font-semibold text-lg transition">
         ← Kembali
       </Link>
 
@@ -63,15 +63,6 @@ function Artist() {
         <span>{Math.round(volume * 100)}%</span>
       </div>
 
-      {/* Tombol Play All */}
-      <div className="text-center mb-8">
-        <button
-          onClick={handlePlayAllSpotify}
-          className="bg-green-500 hover:bg-green-600 text-white font-semibold px-6 py-2 rounded-full shadow-lg transition"
-        >
-          ▶️ Play All via Spotify
-        </button>
-      </div>
 
       {/* Spotify Embed Player */}
       <div className="w-full max-w-2xl mx-auto mb-10">
