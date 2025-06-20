@@ -11,6 +11,9 @@ import Album from "./pages/album";
 import Artist from "./pages/artist";
 import "./index.css";
 
+// Tambahkan PWA service worker registration
+import * as serviceWorkerRegistration from "./serviceWorkerRegistration"; // Pastikan file ini ada (bawaan CRA)
+
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
@@ -31,3 +34,6 @@ root.render(
     </BrowserRouter>
   </React.StrictMode>
 );
+
+// Aktifkan PWA (service worker)
+serviceWorkerRegistration.register();
