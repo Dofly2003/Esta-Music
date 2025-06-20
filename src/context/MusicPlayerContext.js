@@ -1,9 +1,9 @@
-import React, { createContext, useContext, useState, useRef } from "react";
+import React, { createContext, useContext, useState, useRef, useEffect } from "react";
 
 const MusicPlayerContext = createContext();
 
 export function MusicPlayerProvider({ children }) {
-  const [currentTrack, setCurrentTrack] = useState(null); // { url, title, artist, ... }
+  const [currentTrack, setCurrentTrack] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef();
 
@@ -12,12 +12,9 @@ export function MusicPlayerProvider({ children }) {
     setIsPlaying(true);
   };
 
-  const togglePlay = () => {
-    setIsPlaying((prev) => !prev);
-  };
+  const togglePlay = () => setIsPlaying((prev) => !prev);
 
-  // Sync play/pause with ref
-  React.useEffect(() => {
+  useEffect(() => {
     if (audioRef.current) {
       if (isPlaying) audioRef.current.play();
       else audioRef.current.pause();
