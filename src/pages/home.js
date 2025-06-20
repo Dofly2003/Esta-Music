@@ -211,14 +211,21 @@ function Home() {
               <div className="flex items-center gap-4">
                 {user && (
                   <div className="flex items-center gap-2 bg-white/80 px-3 py-1 rounded shadow border border-green-100 backdrop-blur-md">
-                    <img
-                      src={user.images?.[0]?.url || "/default-avatar.png"}
-                      alt={user.display_name}
-                      className="w-9 h-9 rounded-full object-cover border-2 border-green-300"
-                    />
+                    {user.images?.[0]?.url ? (
+                      <img
+                        src={user.images[0].url}
+                        alt={user.display_name}
+                        className="w-9 h-9 rounded-full object-cover border-2 border-green-300"
+                      />
+                    ) : (
+                      <div className="w-9 h-9 flex items-center justify-center rounded-full bg-green-600 text-white font-bold border-2 border-green-300">
+                        {user.display_name?.charAt(0).toUpperCase() || "?"}
+                      </div>
+                    )}
                     <span className="font-medium text-gray-800">{user.display_name}</span>
                   </div>
                 )}
+
                 <button onClick={handleLogout} className="text-red-500 underline font-semibold text-lg">Logout</button>
               </div>
             </div>
